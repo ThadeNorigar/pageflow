@@ -2,7 +2,12 @@ import { getSpaces } from '../../../src/resolvers/confluence/spaces';
 
 const mockRequestConfluence = jest.fn();
 jest.mock('@forge/api', () => ({
-  requestConfluence: (...args: unknown[]) => mockRequestConfluence(...args),
+  __esModule: true,
+  default: {
+    asUser: () => ({
+      requestConfluence: (...args: unknown[]) => mockRequestConfluence(...args),
+    }),
+  },
   route: (strings: TemplateStringsArray, ...values: unknown[]) => {
     let result = '';
     strings.forEach((str, i) => {
@@ -41,7 +46,7 @@ describe('getSpaces', () => {
     );
   });
 
-  it('should return mapped space objects', async () => {
+  it('should return mapped space objects with string ids', async () => {
     mockRequestConfluence.mockResolvedValue(
       apiResponse({
         results: [
@@ -70,12 +75,12 @@ describe('getSpaces', () => {
     expect(spaces).toEqual([]);
   });
 
-  it('should handle cursor-based pagination', async () => {
+  it('should handle pagination', async () => {
     mockRequestConfluence
       .mockResolvedValueOnce(
         apiResponse({
           results: [{ id: '1', key: 'A', name: 'Alpha', type: 'global' }],
-          _links: { next: '/wiki/api/v2/spaces?cursor=abc123' },
+          _links: { next: '/wiki/api/v2/spaces?cursor=abc' },
         })
       )
       .mockResolvedValueOnce(

@@ -8,7 +8,7 @@ export interface ConfluenceSpace {
 export interface ConfluencePage {
   id: string;
   title: string;
-  spaceId: string;
+  spaceKey: string;
   parentId: string | null;
   hasChildren: boolean;
 }
@@ -25,12 +25,14 @@ export interface ConfluenceApiResponse<T> {
   };
 }
 
-export interface RawConfluencePage {
+export interface RawSpace {
+  id: string;
+  key: string;
+  name: string;
+  type: string;
+}
+
+export interface RawPage {
   id: string;
   title: string;
-  spaceId: string;
-  parentId: string | null;
-  _links: {
-    childPages?: string;
-  };
 }

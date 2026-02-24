@@ -1,17 +1,28 @@
-import { requestConfluence, route, assumeTrustedRoute, Route } from '@forge/api';
-import { ConfluenceApiResponse, ConfluencePage, RawConfluencePage } from './types';
+import api, { route, assumeTrustedRoute } from '@forge/api';
+import { ConfluencePage, RawPage } from './types';
 
-function mapPage(raw: RawConfluencePage): ConfluencePage {
-  return {
-    id: raw.id,
-    title: raw.title,
-    spaceId: raw.spaceId,
-    parentId: raw.parentId ?? null,
-    hasChildren: Boolean(raw._links?.childPages),
+interface V2PageResponse {
+  results: RawPage[];
+  _links: {
+    next?: string;
   };
 }
 
-async function fetchPages(initialUrl: Route): Promise<ConfluencePage[]> {
+function mapPage(raw: RawPage, spaceKey: string, parentId: string | null): ConfluencePage {
+  return {
+    id: raw.id,
+    title: raw.title,
+    spaceKey,
+    parentId,
+    hasChildren: true,
+  };
+}
+
+async function fetchPages(
+  initialUrl: ReturnType<typeof route>,
+  spaceKey: string,
+  parentId: string | null
+): Promise<ConfluencePage[]> {
   const allPages: ConfluencePage[] = [];
   let nextUrl: string | null = null;
   let isFirst = true;
@@ -19,17 +30,17 @@ async function fetchPages(initialUrl: Route): Promise<ConfluencePage[]> {
   while (isFirst || nextUrl) {
     isFirst = false;
     const safeUrl = nextUrl ? assumeTrustedRoute(nextUrl) : initialUrl;
-    const response = await requestConfluence(safeUrl, { method: 'GET' });
+    const response = await api.asUser().requestConfluence(safeUrl, { method: 'GET' });
 
     if (!response.ok) {
       const text = await response.text();
       throw new Error(`Failed to fetch pages: ${response.status} ${text}`);
     }
 
-    const data: ConfluenceApiResponse<RawConfluencePage> = await response.json();
+    const data: V2PageResponse = await response.json();
 
     for (const page of data.results) {
-      allPages.push(mapPage(page));
+      allPages.push(mapPage(page, spaceKey, parentId));
     }
 
     nextUrl = data._links.next ?? null;
@@ -38,10 +49,18 @@ async function fetchPages(initialUrl: Route): Promise<ConfluencePage[]> {
   return allPages;
 }
 
-export async function getPages(spaceId: string): Promise<ConfluencePage[]> {
-  return fetchPages(route`/wiki/api/v2/spaces/${spaceId}/pages?depth=0&limit=25`);
+export async function getPages(spaceKey: string, spaceId: string): Promise<ConfluencePage[]> {
+  return fetchPages(
+    route`/wiki/api/v2/pages?space-id=${spaceId}&depth=root&status=current&limit=25`,
+    spaceKey,
+    null
+  );
 }
 
-export async function getChildPages(pageId: string): Promise<ConfluencePage[]> {
-  return fetchPages(route`/wiki/api/v2/pages/${pageId}/children?limit=25`);
+export async function getChildPages(pageId: string, spaceKey: string): Promise<ConfluencePage[]> {
+  return fetchPages(
+    route`/wiki/api/v2/pages/${pageId}/children/page?limit=25`,
+    spaceKey,
+    pageId
+  );
 }

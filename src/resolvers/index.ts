@@ -12,12 +12,12 @@ resolver.define('getSpaces', async () => {
   return getSpaces();
 });
 
-resolver.define('getPages', async ({ payload }: { payload: { spaceId: string } }) => {
-  return getPages(payload.spaceId);
+resolver.define('getPages', async ({ payload }: { payload: { spaceKey: string; spaceId: string } }) => {
+  return getPages(payload.spaceKey, payload.spaceId);
 });
 
-resolver.define('getChildPages', async ({ payload }: { payload: { pageId: string } }) => {
-  return getChildPages(payload.pageId);
+resolver.define('getChildPages', async ({ payload }: { payload: { pageId: string; spaceKey: string } }) => {
+  return getChildPages(payload.pageId, payload.spaceKey);
 });
 
 export const handler = resolver.getDefinitions();

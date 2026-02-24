@@ -1,5 +1,21 @@
-import { requestConfluence, route, assumeTrustedRoute } from '@forge/api';
-import { ConfluenceApiResponse, ConfluenceSpace } from './types';
+import api, { route, assumeTrustedRoute } from '@forge/api';
+import { ConfluenceSpace, RawSpace } from './types';
+
+interface V2SpaceResponse {
+  results: RawSpace[];
+  _links: {
+    next?: string;
+  };
+}
+
+function mapSpace(raw: RawSpace): ConfluenceSpace {
+  return {
+    id: String(raw.id),
+    key: raw.key,
+    name: raw.name,
+    type: raw.type === 'global' || raw.type === 'personal' ? raw.type : 'global',
+  };
+}
 
 export async function getSpaces(): Promise<ConfluenceSpace[]> {
   const allSpaces: ConfluenceSpace[] = [];
@@ -12,22 +28,17 @@ export async function getSpaces(): Promise<ConfluenceSpace[]> {
       ? assumeTrustedRoute(nextUrl)
       : route`/wiki/api/v2/spaces?limit=25`;
 
-    const response = await requestConfluence(safeUrl, { method: 'GET' });
+    const response = await api.asUser().requestConfluence(safeUrl, { method: 'GET' });
 
     if (!response.ok) {
       const text = await response.text();
       throw new Error(`Failed to fetch spaces: ${response.status} ${text}`);
     }
 
-    const data: ConfluenceApiResponse<ConfluenceSpace> = await response.json();
+    const data: V2SpaceResponse = await response.json();
 
     for (const space of data.results) {
-      allSpaces.push({
-        id: space.id,
-        key: space.key,
-        name: space.name,
-        type: space.type,
-      });
+      allSpaces.push(mapSpace(space));
     }
 
     nextUrl = data._links.next ?? null;
