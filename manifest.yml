@@ -2,6 +2,8 @@ modules:
   confluence:globalPage:
     - key: confluence-importer-global
       resource: frontend
+      resolver:
+        function: resolver
       route: confluence-importer
       title: ConfluenceImporter
   function:
