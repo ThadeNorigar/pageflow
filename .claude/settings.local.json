@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo bd not available:*)",
+      "Bash(node:*)",
+      "Bash(forge:*)",
+      "Bash(cd:*)"
+    ]
+  }
+}

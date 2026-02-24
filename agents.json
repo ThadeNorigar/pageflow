@@ -1,0 +1,165 @@
+{
+  "project": "ConfluenceImporter",
+  "tech_stack": "forge",
+  "agents": [
+    {
+      "name": "dispatch",
+      "type": "utility",
+      "command": ".claude/commands/dispatch.md"
+    },
+    {
+      "name": "po",
+      "type": "analyst",
+      "command": ".claude/commands/po.md",
+      "triggers": ["feature"],
+      "phase": 1
+    },
+    {
+      "name": "architect",
+      "type": "architect",
+      "command": ".claude/commands/architect.md",
+      "triggers": ["feature", "refactor"],
+      "phase": 2
+    },
+    {
+      "name": "developer",
+      "type": "developer",
+      "command": ".claude/commands/developer.md",
+      "triggers": ["feature", "bug", "hotfix", "refactor", "chore"],
+      "phase": 4
+    },
+    {
+      "name": "reviewer",
+      "type": "reviewer",
+      "command": ".claude/commands/reviewer.md",
+      "triggers": ["feature", "refactor"],
+      "phase": 5
+    },
+    {
+      "name": "security",
+      "type": "security",
+      "command": ".claude/commands/security.md",
+      "triggers": ["feature"],
+      "phase": 5
+    },
+    {
+      "name": "tester",
+      "type": "tester",
+      "command": ".claude/commands/tester.md",
+      "triggers": ["feature", "bug"],
+      "phase": 6
+    },
+    {
+      "name": "docs",
+      "type": "docs",
+      "command": ".claude/commands/docs.md",
+      "triggers": ["feature"],
+      "phase": 7
+    },
+    {
+      "name": "bug",
+      "type": "utility",
+      "command": ".claude/commands/bug.md"
+    },
+    {
+      "name": "hotfix",
+      "type": "utility",
+      "command": ".claude/commands/hotfix.md"
+    },
+    {
+      "name": "refactor",
+      "type": "utility",
+      "command": ".claude/commands/refactor.md"
+    },
+    {
+      "name": "feature",
+      "type": "utility",
+      "command": ".claude/commands/feature.md"
+    },
+    {
+      "name": "forge-cli",
+      "type": "ops",
+      "command": ".claude/commands/forge-cli.md"
+    },
+    {
+      "name": "manifest",
+      "type": "developer",
+      "command": ".claude/commands/manifest.md"
+    },
+    {
+      "name": "marketplace",
+      "type": "analyst",
+      "command": ".claude/commands/marketplace.md"
+    },
+    {
+      "name": "ui",
+      "type": "developer",
+      "command": ".claude/commands/ui.md"
+    },
+    {
+      "name": "api",
+      "type": "developer",
+      "command": ".claude/commands/api.md"
+    },
+    {
+      "name": "migration",
+      "type": "developer",
+      "command": ".claude/commands/migration.md"
+    },
+    {
+      "name": "commit",
+      "type": "utility",
+      "command": ".claude/commands/commit.md"
+    },
+    {
+      "name": "debug",
+      "type": "ops",
+      "command": ".claude/commands/debug.md"
+    },
+    {
+      "name": "end",
+      "type": "utility",
+      "command": ".claude/commands/end.md"
+    }
+  ],
+  "pipelines": {
+    "feature": [
+      "po",
+      "architect",
+      "pre-mortem",
+      "tdd",
+      "developer",
+      "reviewer",
+      "security",
+      "tester",
+      "docs",
+      "verify"
+    ],
+    "bug": [
+      "developer",
+      "tester",
+      "verify"
+    ],
+    "hotfix": [
+      "developer",
+      "verify"
+    ],
+    "refactor": [
+      "architect",
+      "developer",
+      "reviewer",
+      "verify"
+    ],
+    "chore": [
+      "developer",
+      "verify"
+    ],
+    "marketplace-release": [
+      "security",
+      "marketplace",
+      "docs",
+      "verify"
+    ]
+  },
+  "test_command": "npm test"
+}
