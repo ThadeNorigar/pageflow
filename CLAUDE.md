@@ -86,12 +86,15 @@ ConfluenceImporter/
 ├── jest.config.js               # Jest config
 ├── .eslintrc.js                 # ESLint config
 ├── .prettierrc                  # Prettier config
+├── webpack.config.js            # Webpack config (Frontend build)
 ├── src/
+│   ├── index.ts                 # Forge handler entry (re-exports resolvers)
 │   ├── resolvers/               # Forge Backend (Lambda functions)
 │   │   ├── index.ts             # Resolver registration
 │   │   ├── confluence/          # Confluence API integration
+│   │   │   ├── types.ts         # Shared interfaces (Space, Page, etc.)
 │   │   │   ├── spaces.ts        # Space listing/selection
-│   │   │   ├── pages.ts         # Page creation/hierarchy
+│   │   │   ├── pages.ts         # Page browsing/hierarchy
 │   │   │   └── attachments.ts   # Attachment upload
 │   │   ├── onenote/             # OneNote/MS Graph integration
 │   │   │   ├── auth.ts          # OAuth2 token management
