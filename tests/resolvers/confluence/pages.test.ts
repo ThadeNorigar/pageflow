@@ -3,6 +3,15 @@ import { getPages, getChildPages } from '../../../src/resolvers/confluence/pages
 const mockRequestConfluence = jest.fn();
 jest.mock('@forge/api', () => ({
   requestConfluence: (...args: unknown[]) => mockRequestConfluence(...args),
+  route: (strings: TemplateStringsArray, ...values: unknown[]) => {
+    let result = '';
+    strings.forEach((str, i) => {
+      result += str;
+      if (i < values.length) result += String(values[i]);
+    });
+    return result;
+  },
+  assumeTrustedRoute: (url: string) => url,
 }));
 
 function apiResponse(body: object, ok = true) {
