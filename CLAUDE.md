@@ -83,7 +83,7 @@ ConfluenceImporter/
 ├── manifest.yml                 # Forge App manifest (Scopes, Modules, Permissions)
 ├── package.json                 # Root package
 ├── tsconfig.json                # TypeScript config
-├── jest.config.ts               # Jest config
+├── jest.config.js               # Jest config
 ├── .eslintrc.js                 # ESLint config
 ├── .prettierrc                  # Prettier config
 ├── src/

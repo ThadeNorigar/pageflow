@@ -1,0 +1,20 @@
+modules:
+  confluence:globalPage:
+    - key: confluence-importer-global
+      resource: frontend
+      resolver:
+        function: resolver
+      title: ConfluenceImporter
+  function:
+    - key: resolver
+      handler: out/resolvers/index.handler
+resources:
+  - key: frontend
+    path: src/frontend/build
+permissions:
+  scopes:
+    - read:confluence-content.all
+app:
+  runtime:
+    name: nodejs18.x
+  id: ari:cloud:ecosystem::app/placeholder
