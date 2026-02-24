@@ -1,0 +1,6 @@
+out/
+build/
+dist/
+node_modules/
+*.config.js
+src/frontend/webpack.config.js

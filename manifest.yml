@@ -2,12 +2,11 @@ modules:
   confluence:globalPage:
     - key: confluence-importer-global
       resource: frontend
-      resolver:
-        function: resolver
+      route: confluence-importer
       title: ConfluenceImporter
   function:
     - key: resolver
-      handler: out/resolvers/index.handler
+      handler: index.handler
 resources:
   - key: frontend
     path: src/frontend/build
@@ -16,5 +15,5 @@ permissions:
     - read:confluence-content.all
 app:
   runtime:
-    name: nodejs18.x
-  id: ari:cloud:ecosystem::app/placeholder
+    name: nodejs22.x
+  id: ari:cloud:ecosystem::app/335e32c0-a0a1-4b73-ac90-6a417a720c1d
