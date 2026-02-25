@@ -35,4 +35,6 @@ export interface RawSpace {
 export interface RawPage {
   id: string;
   title: string;
+  parentId?: string;
+  parentType?: string;
 }

@@ -28,7 +28,7 @@ export async function getSpaces(): Promise<ConfluenceSpace[]> {
       ? assumeTrustedRoute(nextUrl)
       : route`/wiki/api/v2/spaces?limit=25`;
 
-    const response = await api.asUser().requestConfluence(safeUrl, { method: 'GET' });
+    const response = await api.asApp().requestConfluence(safeUrl, { method: 'GET' });
 
     if (!response.ok) {
       const text = await response.text();

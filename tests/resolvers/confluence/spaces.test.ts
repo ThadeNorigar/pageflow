@@ -4,7 +4,7 @@ const mockRequestConfluence = jest.fn();
 jest.mock('@forge/api', () => ({
   __esModule: true,
   default: {
-    asUser: () => ({
+    asApp: () => ({
       requestConfluence: (...args: unknown[]) => mockRequestConfluence(...args),
     }),
   },

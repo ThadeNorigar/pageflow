@@ -30,7 +30,7 @@ async function fetchPages(
   while (isFirst || nextUrl) {
     isFirst = false;
     const safeUrl = nextUrl ? assumeTrustedRoute(nextUrl) : initialUrl;
-    const response = await api.asUser().requestConfluence(safeUrl, { method: 'GET' });
+    const response = await api.asApp().requestConfluence(safeUrl, { method: 'GET' });
 
     if (!response.ok) {
       const text = await response.text();
@@ -59,7 +59,7 @@ export async function getPages(spaceKey: string, spaceId: string): Promise<Confl
 
 export async function getChildPages(pageId: string, spaceKey: string): Promise<ConfluencePage[]> {
   return fetchPages(
-    route`/wiki/api/v2/pages/${pageId}/children/page?limit=25`,
+    route`/wiki/api/v2/pages?parent-id=${pageId}&status=current&limit=25`,
     spaceKey,
     pageId
   );

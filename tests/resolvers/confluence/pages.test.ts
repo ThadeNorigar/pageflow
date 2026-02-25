@@ -4,7 +4,7 @@ const mockRequestConfluence = jest.fn();
 jest.mock('@forge/api', () => ({
   __esModule: true,
   default: {
-    asUser: () => ({
+    asApp: () => ({
       requestConfluence: (...args: unknown[]) => mockRequestConfluence(...args),
     }),
   },
@@ -33,12 +33,12 @@ describe('getPages', () => {
     mockRequestConfluence.mockReset();
   });
 
-  it('should call GET /wiki/api/v2/pages with space-id and depth=root', async () => {
+  it('should call v2 pages endpoint with depth=root', async () => {
     mockRequestConfluence.mockResolvedValue(
       apiResponse({ results: [], _links: {} })
     );
 
-    await getPages('DEV', '123');
+    await getPages('CD', '123');
 
     expect(mockRequestConfluence).toHaveBeenCalledWith(
       expect.stringMatching(/\/wiki\/api\/v2\/pages\?space-id=123.*depth=root/),
@@ -46,26 +46,18 @@ describe('getPages', () => {
     );
   });
 
-  it('should return mapped page objects with null parentId for root', async () => {
+  it('should return mapped pages with null parentId for root', async () => {
     mockRequestConfluence.mockResolvedValue(
       apiResponse({
-        results: [
-          { id: '10', title: 'Welcome' },
-        ],
+        results: [{ id: '10', title: 'Welcome' }],
         _links: {},
       })
     );
 
-    const pages = await getPages('DEV', '123');
+    const pages = await getPages('CD', '123');
 
     expect(pages).toEqual([
-      {
-        id: '10',
-        title: 'Welcome',
-        spaceKey: 'DEV',
-        parentId: null,
-        hasChildren: true,
-      },
+      { id: '10', title: 'Welcome', spaceKey: 'CD', parentId: null, hasChildren: true },
     ]);
   });
 
@@ -83,22 +75,18 @@ describe('getPages', () => {
     mockRequestConfluence
       .mockResolvedValueOnce(
         apiResponse({
-          results: [
-            { id: '10', title: 'P1' },
-          ],
+          results: [{ id: '10', title: 'P1' }],
           _links: { next: '/wiki/api/v2/pages?space-id=123&cursor=abc' },
         })
       )
       .mockResolvedValueOnce(
         apiResponse({
-          results: [
-            { id: '11', title: 'P2' },
-          ],
+          results: [{ id: '11', title: 'P2' }],
           _links: {},
         })
       );
 
-    const pages = await getPages('DEV', '123');
+    const pages = await getPages('CD', '123');
 
     expect(mockRequestConfluence).toHaveBeenCalledTimes(2);
     expect(pages).toHaveLength(2);
@@ -111,21 +99,6 @@ describe('getPages', () => {
 
     await expect(getPages('bad', '999')).rejects.toThrow();
   });
-
-  it('should always return null parentId for root pages', async () => {
-    mockRequestConfluence.mockResolvedValue(
-      apiResponse({
-        results: [
-          { id: '20', title: 'Root Page' },
-        ],
-        _links: {},
-      })
-    );
-
-    const pages = await getPages('DEV', '123');
-
-    expect(pages[0].parentId).toBeNull();
-  });
 });
 
 describe('getChildPages', () => {
@@ -133,7 +106,7 @@ describe('getChildPages', () => {
     mockRequestConfluence.mockReset();
   });
 
-  it('should call GET /wiki/api/v2/pages/{id}/children/page', async () => {
+  it('should call v2 pages endpoint with parent-id filter', async () => {
     mockRequestConfluence.mockResolvedValue(
       apiResponse({ results: [], _links: {} })
     );
@@ -141,12 +114,12 @@ describe('getChildPages', () => {
     await getChildPages('42', 'DEV');
 
     expect(mockRequestConfluence).toHaveBeenCalledWith(
-      expect.stringContaining('/wiki/api/v2/pages/42/children/page'),
+      expect.stringMatching(/\/wiki\/api\/v2\/pages\?parent-id=42/),
       expect.objectContaining({ method: 'GET' })
     );
   });
 
-  it('should return child pages with parentId set to parent page id', async () => {
+  it('should return child pages with parentId set', async () => {
     mockRequestConfluence.mockResolvedValue(
       apiResponse({
         results: [
@@ -181,40 +154,5 @@ describe('getChildPages', () => {
     );
 
     await expect(getChildPages('err', 'DEV')).rejects.toThrow();
-  });
-});
-
-describe('SpaceSelection logic', () => {
-  it('should return spaceKey for page selection', async () => {
-    mockRequestConfluence.mockResolvedValue(
-      apiResponse({
-        results: [
-          { id: '10', title: 'Root' },
-        ],
-        _links: {},
-      })
-    );
-
-    const pages = await getPages('DEV', '123');
-    const selected = pages[0];
-
-    expect(selected).toHaveProperty('id');
-    expect(selected).toHaveProperty('spaceKey');
-    expect(selected.spaceKey).toBe('DEV');
-  });
-
-  it('should allow null parentId for root pages', async () => {
-    mockRequestConfluence.mockResolvedValue(
-      apiResponse({
-        results: [
-          { id: '10', title: 'Top' },
-        ],
-        _links: {},
-      })
-    );
-
-    const pages = await getPages('DEV', '123');
-
-    expect(pages[0].parentId).toBeNull();
   });
 });
