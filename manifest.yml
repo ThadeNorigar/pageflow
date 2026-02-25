@@ -19,6 +19,7 @@ permissions:
     - read:space:confluence
     - read:page:confluence
     - read:folder:confluence
+    - write:confluence-file
     - write:page:confluence
     - write:attachment:confluence
 app:
