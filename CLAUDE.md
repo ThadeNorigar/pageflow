@@ -95,6 +95,7 @@ ConfluenceImporter/
 │   │   │   ├── types.ts         # Shared interfaces (Space, Page, etc.)
 │   │   │   ├── spaces.ts        # Space listing/selection
 │   │   │   ├── pages.ts         # Page browsing/hierarchy
+│   │   │   ├── createPage.ts    # Seite erstellen (v2 API)
 │   │   │   └── attachments.ts   # Attachment upload
 │   │   ├── onenote/             # OneNote/MS Graph integration
 │   │   │   ├── auth.ts          # OAuth2 token management
@@ -162,7 +163,7 @@ bd sync                         # Git-Sync
 ## Forge-Spezifika
 
 ### manifest.yml
-- Definiert App-Scopes (read:confluence-content.all, write:confluence-content.all, etc.)
+- Definiert App-Scopes (read:confluence-content.all, read:confluence-space.summary, read:space:confluence, read:page:confluence, read:folder:confluence, write:confluence-file, write:page:confluence, write:attachment:confluence)
 - Module: `confluence:globalPage` für Hauptseite, `confluence:spacePage` für Space-Kontext
 - Providers: Microsoft Graph OAuth2 für OneNote-Zugriff
 - Remotes: Erlaubte externe Domains (graph.microsoft.com)
