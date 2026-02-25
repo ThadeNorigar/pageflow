@@ -19,6 +19,7 @@ interface ConfluencePage {
 
 export interface SpaceSelection {
   spaceKey: string;
+  spaceId: string;
   pageId: string | null;
 }
 
@@ -205,7 +206,7 @@ const SpaceBrowser: React.FC<SpaceBrowserProps> = ({ onSelect }) => {
     try {
       const result = await invoke<ConfluencePage[]>('getPages', { spaceKey: space.key, spaceId: space.id });
       setPages(result);
-      onSelect({ spaceKey: space.key, pageId: null });
+      onSelect({ spaceKey: space.key, spaceId: space.id, pageId: null });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load pages');
     } finally {
@@ -216,7 +217,7 @@ const SpaceBrowser: React.FC<SpaceBrowserProps> = ({ onSelect }) => {
   const selectPage = useCallback((page: ConfluencePage) => {
     setSelectedPageId(page.id);
     if (selectedSpace) {
-      onSelect({ spaceKey: selectedSpace.key, pageId: page.id });
+      onSelect({ spaceKey: selectedSpace.key, spaceId: selectedSpace.id, pageId: page.id });
     }
   }, [selectedSpace, onSelect]);
 
@@ -253,7 +254,7 @@ const SpaceBrowser: React.FC<SpaceBrowserProps> = ({ onSelect }) => {
               <span
                 onClick={() => {
                   setSelectedPageId(null);
-                  onSelect({ spaceKey: selectedSpace.key, pageId: null });
+                  onSelect({ spaceKey: selectedSpace.key, spaceId: selectedSpace.id, pageId: null });
                 }}
                 style={{
                   marginLeft: 8,

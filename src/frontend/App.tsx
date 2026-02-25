@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import SpaceBrowser, { SpaceSelection } from './components/SpaceBrowser';
+import FileUpload from './components/FileUpload';
 
 const App: React.FC = () => {
   const [selection, setSelection] = useState<SpaceSelection | null>(null);
@@ -40,6 +41,8 @@ const App: React.FC = () => {
           }
         </div>
       )}
+
+      <FileUpload selection={selection} spaceId={selection?.spaceId ?? null} />
     </div>
   );
 };
