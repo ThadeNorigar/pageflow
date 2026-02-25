@@ -14,6 +14,7 @@ interface ConfluencePage {
   spaceKey: string;
   parentId: string | null;
   hasChildren: boolean;
+  isFolder?: boolean;
 }
 
 export interface SpaceSelection {
@@ -56,36 +57,20 @@ const Spinner: React.FC = () => (
   </div>
 );
 
-const PageNode: React.FC<PageNodeProps> = ({ page, depth, selectedPageId, onSelectPage }) => {
-  const [children, setChildren] = useState<ConfluencePage[]>([]);
+interface PageNodePropsExt extends PageNodeProps {
+  allPages: ConfluencePage[];
+}
+
+const PageNode: React.FC<PageNodePropsExt> = ({ page, depth, selectedPageId, onSelectPage, allPages }) => {
   const [expanded, setExpanded] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [hasChildren, setHasChildren] = useState(page.hasChildren);
   const [hovered, setHovered] = useState(false);
 
-  const toggleExpand = useCallback(async () => {
-    if (expanded) {
-      setExpanded(false);
-      return;
-    }
-    if (children.length === 0 && hasChildren) {
-      setLoading(true);
-      try {
-        const result = await invoke<ConfluencePage[]>('getChildPages', {
-          pageId: page.id,
-          spaceKey: page.spaceKey,
-        });
-        setChildren(result);
-        if (result.length === 0) {
-          setHasChildren(false);
-          return;
-        }
-      } finally {
-        setLoading(false);
-      }
-    }
-    setExpanded(true);
-  }, [expanded, children.length, hasChildren, page.id, page.spaceKey]);
+  const children = allPages.filter(p => p.parentId === page.id);
+  const hasChildren = children.length > 0;
+
+  const toggleExpand = useCallback(() => {
+    setExpanded(prev => !prev);
+  }, []);
 
   const isSelected = selectedPageId === page.id;
 
@@ -127,18 +112,13 @@ const PageNode: React.FC<PageNodeProps> = ({ page, depth, selectedPageId, onSele
               borderRadius: 3,
             }}
           >
-            {loading ? (
-              <svg width="12" height="12" viewBox="0 0 16 16" style={{ animation: 'spin 0.8s linear infinite' }}>
-                <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="28" strokeLinecap="round" />
-              </svg>
-            ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" style={{ transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>
-                <path d="M10 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
+            <svg width="12" height="12" viewBox="0 0 24 24" style={{ transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>
+              <path d="M10 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </span>
         )}
         {!hasChildren && <span style={{ width: 22, display: 'inline-block', flexShrink: 0 }} />}
+        {page.isFolder && <span style={{ marginRight: 4, fontSize: 14 }}>📁</span>}
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{page.title}</span>
       </div>
       {expanded && children.map((child) => (
@@ -148,6 +128,7 @@ const PageNode: React.FC<PageNodeProps> = ({ page, depth, selectedPageId, onSele
           depth={depth + 1}
           selectedPageId={selectedPageId}
           onSelectPage={onSelectPage}
+          allPages={allPages}
         />
       ))}
     </div>
@@ -298,13 +279,17 @@ const SpaceBrowser: React.FC<SpaceBrowserProps> = ({ onSelect }) => {
             </div>
           )}
           <div style={{ padding: '4px 0' }}>
-            {pages.map((page) => (
+            {pages.filter(p => {
+              if (p.parentId === null) return true;
+              return !pages.some(other => other.id === p.parentId);
+            }).map((page) => (
               <PageNode
                 key={page.id}
                 page={page}
                 depth={0}
                 selectedPageId={selectedPageId}
                 onSelectPage={selectPage}
+                allPages={pages}
               />
             ))}
           </div>

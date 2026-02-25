@@ -11,6 +11,7 @@ export interface ConfluencePage {
   spaceKey: string;
   parentId: string | null;
   hasChildren: boolean;
+  isFolder?: boolean;
 }
 
 export interface SpaceSelection {

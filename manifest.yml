@@ -18,6 +18,7 @@ permissions:
     - read:confluence-space.summary
     - read:space:confluence
     - read:page:confluence
+    - read:folder:confluence
 app:
   runtime:
     name: nodejs22.x

@@ -1,6 +1,6 @@
 import Resolver from '@forge/resolver';
 import { getSpaces } from './confluence/spaces';
-import { getPages, getChildPages } from './confluence/pages';
+import { getPages } from './confluence/pages';
 
 const resolver = new Resolver();
 
@@ -14,10 +14,6 @@ resolver.define('getSpaces', async () => {
 
 resolver.define('getPages', async ({ payload }: { payload: { spaceKey: string; spaceId: string } }) => {
   return getPages(payload.spaceKey, payload.spaceId);
-});
-
-resolver.define('getChildPages', async ({ payload }: { payload: { pageId: string; spaceKey: string } }) => {
-  return getChildPages(payload.pageId, payload.spaceKey);
 });
 
 export const handler = resolver.getDefinitions();

@@ -1,4 +1,4 @@
-import { getPages, getChildPages } from '../../../src/resolvers/confluence/pages';
+import { getPages } from '../../../src/resolvers/confluence/pages';
 
 const mockRequestConfluence = jest.fn();
 jest.mock('@forge/api', () => ({
@@ -33,7 +33,7 @@ describe('getPages', () => {
     mockRequestConfluence.mockReset();
   });
 
-  it('should call v2 pages endpoint with depth=root', async () => {
+  it('should fetch all pages for space-id', async () => {
     mockRequestConfluence.mockResolvedValue(
       apiResponse({ results: [], _links: {} })
     );
@@ -41,15 +41,18 @@ describe('getPages', () => {
     await getPages('CD', '123');
 
     expect(mockRequestConfluence).toHaveBeenCalledWith(
-      expect.stringMatching(/\/wiki\/api\/v2\/pages\?space-id=123.*depth=root/),
+      expect.stringContaining('space-id=123'),
       expect.objectContaining({ method: 'GET' })
     );
   });
 
-  it('should return mapped pages with null parentId for root', async () => {
+  it('should return pages with parentId from API response', async () => {
     mockRequestConfluence.mockResolvedValue(
       apiResponse({
-        results: [{ id: '10', title: 'Welcome' }],
+        results: [
+          { id: '10', title: 'Homepage', parentId: null },
+          { id: '20', title: 'Child', parentId: '10' },
+        ],
         _links: {},
       })
     );
@@ -57,7 +60,8 @@ describe('getPages', () => {
     const pages = await getPages('CD', '123');
 
     expect(pages).toEqual([
-      { id: '10', title: 'Welcome', spaceKey: 'CD', parentId: null, hasChildren: true },
+      { id: '10', title: 'Homepage', spaceKey: 'CD', parentId: null, hasChildren: true },
+      { id: '20', title: 'Child', spaceKey: 'CD', parentId: '10', hasChildren: false },
     ]);
   });
 
@@ -67,7 +71,6 @@ describe('getPages', () => {
     );
 
     const pages = await getPages('EMPTY', '456');
-
     expect(pages).toEqual([]);
   });
 
@@ -76,7 +79,7 @@ describe('getPages', () => {
       .mockResolvedValueOnce(
         apiResponse({
           results: [{ id: '10', title: 'P1' }],
-          _links: { next: '/wiki/api/v2/pages?space-id=123&cursor=abc' },
+          _links: { next: '/wiki/api/v2/pages?cursor=abc' },
         })
       )
       .mockResolvedValueOnce(
@@ -92,67 +95,32 @@ describe('getPages', () => {
     expect(pages).toHaveLength(2);
   });
 
+  it('should compute hasChildren from parentId relationships', async () => {
+    mockRequestConfluence.mockResolvedValue(
+      apiResponse({
+        results: [
+          { id: '1', title: 'Root', parentId: null },
+          { id: '2', title: 'Child of Root', parentId: '1' },
+          { id: '3', title: 'Leaf', parentId: '1' },
+          { id: '4', title: 'Grandchild', parentId: '2' },
+        ],
+        _links: {},
+      })
+    );
+
+    const pages = await getPages('CD', '123');
+
+    expect(pages.find(p => p.id === '1')!.hasChildren).toBe(true);
+    expect(pages.find(p => p.id === '2')!.hasChildren).toBe(true);
+    expect(pages.find(p => p.id === '3')!.hasChildren).toBe(false);
+    expect(pages.find(p => p.id === '4')!.hasChildren).toBe(false);
+  });
+
   it('should throw on API error', async () => {
     mockRequestConfluence.mockResolvedValue(
       apiResponse({ message: 'Not Found' }, false)
     );
 
     await expect(getPages('bad', '999')).rejects.toThrow();
-  });
-});
-
-describe('getChildPages', () => {
-  beforeEach(() => {
-    mockRequestConfluence.mockReset();
-  });
-
-  it('should call v2 pages endpoint with parent-id filter', async () => {
-    mockRequestConfluence.mockResolvedValue(
-      apiResponse({ results: [], _links: {} })
-    );
-
-    await getChildPages('42', 'DEV');
-
-    expect(mockRequestConfluence).toHaveBeenCalledWith(
-      expect.stringMatching(/\/wiki\/api\/v2\/pages\?parent-id=42/),
-      expect.objectContaining({ method: 'GET' })
-    );
-  });
-
-  it('should return child pages with parentId set', async () => {
-    mockRequestConfluence.mockResolvedValue(
-      apiResponse({
-        results: [
-          { id: '100', title: 'Sub Page' },
-          { id: '101', title: 'Leaf Page' },
-        ],
-        _links: {},
-      })
-    );
-
-    const children = await getChildPages('42', 'DEV');
-
-    expect(children).toEqual([
-      { id: '100', title: 'Sub Page', spaceKey: 'DEV', parentId: '42', hasChildren: true },
-      { id: '101', title: 'Leaf Page', spaceKey: 'DEV', parentId: '42', hasChildren: true },
-    ]);
-  });
-
-  it('should return empty array for leaf page', async () => {
-    mockRequestConfluence.mockResolvedValue(
-      apiResponse({ results: [], _links: {} })
-    );
-
-    const children = await getChildPages('leaf-id', 'DEV');
-
-    expect(children).toEqual([]);
-  });
-
-  it('should throw on API error', async () => {
-    mockRequestConfluence.mockResolvedValue(
-      apiResponse({ message: 'Server Error' }, false)
-    );
-
-    await expect(getChildPages('err', 'DEV')).rejects.toThrow();
   });
 });
