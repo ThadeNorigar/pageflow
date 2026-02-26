@@ -165,8 +165,9 @@ bd sync                         # Git-Sync
 ### manifest.yml
 - Definiert App-Scopes (read:confluence-content.all, read:confluence-space.summary, read:space:confluence, read:page:confluence, read:folder:confluence, write:confluence-file, write:page:confluence, write:attachment:confluence)
 - Module: `confluence:globalPage` für Hauptseite, `confluence:spacePage` für Space-Kontext
-- Providers: Microsoft Graph OAuth2 für OneNote-Zugriff
-- Remotes: Erlaubte externe Domains (graph.microsoft.com)
+- Providers: Microsoft Graph OAuth2 für OneNote-Zugriff (`api.asUser().withProvider()`)
+- Remotes: microsoft-login (login.microsoftonline.com), microsoft-graph (graph.microsoft.com)
+- external.fetch: Backend-Zugriff auf beide Remotes
 
 ### Forge Storage
 - Key-Value Store für App-Konfiguration
