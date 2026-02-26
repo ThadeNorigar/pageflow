@@ -9,6 +9,47 @@ modules:
   function:
     - key: resolver
       handler: index.handler
+      providers:
+        auth:
+          - microsoft-graph
+providers:
+  auth:
+    - key: microsoft-graph
+      name: Microsoft OneNote
+      type: oauth2
+      clientId: FORGE_VAR_MICROSOFT_CLIENT_ID
+      scopes:
+        - openid
+        - profile
+        - User.Read
+        - Notes.Read.All
+      remotes:
+        - microsoft-graph
+      bearerMethod: authorization-header
+      actions:
+        authorization:
+          remote: microsoft-login
+          path: /common/oauth2/v2.0/authorize
+        exchange:
+          remote: microsoft-login
+          path: /common/oauth2/v2.0/token
+        refreshToken:
+          remote: microsoft-login
+          path: /common/oauth2/v2.0/token
+        revokeToken:
+          remote: microsoft-login
+          path: /common/oauth2/v2.0/logout
+        retrieveProfile:
+          remote: microsoft-graph
+          path: /v1.0/me
+          resolvers:
+            id: id
+            displayName: displayName
+remotes:
+  - key: microsoft-login
+    baseUrl: https://login.microsoftonline.com
+  - key: microsoft-graph
+    baseUrl: https://graph.microsoft.com
 resources:
   - key: frontend
     path: src/frontend/build
@@ -22,6 +63,11 @@ permissions:
     - write:confluence-file
     - write:page:confluence
     - write:attachment:confluence
+  external:
+    fetch:
+      backend:
+        - address: https://login.microsoftonline.com
+        - address: https://graph.microsoft.com
 app:
   runtime:
     name: nodejs22.x
