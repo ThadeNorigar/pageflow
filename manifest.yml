@@ -25,7 +25,7 @@ providers:
         - User.Read
         - Notes.Read.All
       remotes:
-        - microsoft-graph
+        - microsoft-graph-api
       bearerMethod: authorization-header
       actions:
         authorization:
@@ -41,7 +41,7 @@ providers:
           remote: microsoft-login
           path: /common/oauth2/v2.0/logout
         retrieveProfile:
-          remote: microsoft-graph
+          remote: microsoft-graph-api
           path: /v1.0/me
           resolvers:
             id: id
@@ -49,7 +49,7 @@ providers:
 remotes:
   - key: microsoft-login
     baseUrl: https://login.microsoftonline.com
-  - key: microsoft-graph
+  - key: microsoft-graph-api
     baseUrl: https://graph.microsoft.com
 resources:
   - key: frontend

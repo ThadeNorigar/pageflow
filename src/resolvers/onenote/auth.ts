@@ -1,6 +1,7 @@
 import api from '@forge/api';
 
 const PROVIDER_KEY = 'microsoft-graph';
+const REMOTE_KEY = 'microsoft-graph-api';
 
 export class MsGraphError extends Error {
   constructor(
@@ -14,7 +15,7 @@ export class MsGraphError extends Error {
 }
 
 function getProvider() {
-  return api.asUser().withProvider(PROVIDER_KEY, PROVIDER_KEY);
+  return api.asUser().withProvider(PROVIDER_KEY, REMOTE_KEY);
 }
 
 export async function checkAuthStatus(): Promise<{
