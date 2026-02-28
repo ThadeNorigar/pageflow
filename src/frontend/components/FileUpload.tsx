@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { invoke, requestConfluence } from '@forge/bridge';
 import { SpaceSelection } from './SpaceBrowser';
+import { validateFile, titleFromFilename } from '../utils/fileValidation';
 
 interface FileUploadProps {
   selection: SpaceSelection | null;
@@ -15,8 +16,6 @@ interface UploadFile {
   pageId?: string;
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
 const C = {
   N900: '#091E42',
   N800: '#172B4D',
@@ -30,20 +29,6 @@ const C = {
   G400: '#00875A',
   G75: '#E3FCEF',
 };
-
-function validateFile(file: File): string | null {
-  if (file.type !== 'application/pdf') {
-    return `"${file.name}" ist keine PDF-Datei`;
-  }
-  if (file.size > MAX_FILE_SIZE) {
-    return `"${file.name}" ist größer als 10MB (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
-  }
-  return null;
-}
-
-function titleFromFilename(name: string): string {
-  return name.replace(/\.pdf$/i, '');
-}
 
 const FileUpload: React.FC<FileUploadProps> = ({ selection, spaceId }) => {
   const [files, setFiles] = useState<UploadFile[]>([]);
