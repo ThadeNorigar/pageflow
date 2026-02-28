@@ -17,7 +17,7 @@ providers:
     - key: microsoft-graph
       name: Microsoft OneNote
       type: oauth2
-      clientId: FORGE_VAR_MICROSOFT_CLIENT_ID
+      clientId: 724d3f03-aef2-46c3-986e-9a92245b1bdb
       scopes:
         - openid
         - profile

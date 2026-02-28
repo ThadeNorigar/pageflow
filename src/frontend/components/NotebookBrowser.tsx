@@ -157,12 +157,27 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
     try {
       const result = await invoke<{ notebooks: Notebook[] }>('getNotebooks');
       setNotebooks(result.notebooks);
+      setAuthStatus({ authenticated: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load notebooks');
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const connectAccount = useCallback(async () => {
+    try {
+      await invoke('requestAuth');
+      const status = await invoke<{ authenticated: boolean; error?: string }>('checkAuthStatus');
+      setAuthStatus(status);
+      if (status.authenticated) {
+        loadNotebooks();
+      }
+    } catch {
+      // requestCredentials() throws a platform exception that Forge handles
+      // to show the consent dialog — this is expected behavior
+    }
+  }, [loadNotebooks]);
 
   const toggleExpand = useCallback(async (id: string, type: 'notebook' | 'section') => {
     if (expandedIds.has(id)) {
@@ -279,7 +294,7 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
             <div style={{ fontSize: 12, color: C.R400, marginBottom: 12 }}>{authStatus.error}</div>
           )}
           <button
-            onClick={loadNotebooks}
+            onClick={connectAccount}
             style={{
               padding: '8px 20px',
               fontSize: 14,

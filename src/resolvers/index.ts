@@ -2,7 +2,7 @@ import Resolver from '@forge/resolver';
 import { getSpaces } from './confluence/spaces';
 import { getPages } from './confluence/pages';
 import { createPage } from './confluence/createPage';
-import { checkAuthStatus, requestMicrosoftGraph } from './onenote/auth';
+import { checkAuthStatus, requestAuth, requestMicrosoftGraph } from './onenote/auth';
 import { getNotebooks, getSections, getPages as getOneNotePages } from './onenote/notebooks';
 
 const resolver = new Resolver();
@@ -13,6 +13,10 @@ resolver.define('getStatus', async () => {
 
 resolver.define('checkAuthStatus', async () => {
   return checkAuthStatus();
+});
+
+resolver.define('requestAuth', async () => {
+  return requestAuth();
 });
 
 resolver.define('getMsGraphProfile', async () => {
