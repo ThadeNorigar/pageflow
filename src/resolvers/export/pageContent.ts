@@ -15,7 +15,7 @@ export async function getPageBody(pageId: string): Promise<PageBody> {
   }
 
   const safeUrl = route`/wiki/api/v2/pages/${pageId}?body-format=storage`;
-  const response = await api.asApp().requestConfluence(safeUrl, { method: 'GET' });
+  const response = await api.asUser().requestConfluence(safeUrl, { method: 'GET' });
 
   if (!response.ok) {
     const text = await response.text();

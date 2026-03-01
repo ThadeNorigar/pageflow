@@ -113,28 +113,28 @@ const ExportPageTree: React.FC<ExportPageTreeProps> = ({ spaceKey, spaceId, sele
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     setPages([]);
     setLoading(true);
     setError(null);
     invoke<ConfluencePage[]>('getPages', { spaceKey, spaceId })
-      .then(setPages)
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
+      .then(data => { if (!cancelled) setPages(data); })
+      .catch((err: Error) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [spaceKey, spaceId]);
 
-  const { childrenMap, rootPages, pageMap } = useMemo(() => {
+  const { childrenMap, rootPages } = useMemo(() => {
     const cMap = new Map<string | null, ConfluencePage[]>();
-    const pMap = new Map<string, ConfluencePage>();
     const pageIds = new Set(pages.map(p => p.id));
     for (const p of pages) {
-      pMap.set(p.id, p);
       const key = p.parentId;
       const list = cMap.get(key);
       if (list) list.push(p);
       else cMap.set(key, [p]);
     }
     const roots = pages.filter(p => p.parentId === null || !pageIds.has(p.parentId));
-    return { childrenMap: cMap, rootPages: roots, pageMap: pMap };
+    return { childrenMap: cMap, rootPages: roots };
   }, [pages]);
 
   const getDescendantIds = useCallback((parentId: string): string[] => {
