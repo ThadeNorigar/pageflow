@@ -1,11 +1,11 @@
 modules:
   confluence:globalPage:
-    - key: confluence-importer-global
+    - key: pageflow-global
       resource: frontend
       resolver:
         function: resolver
-      route: confluence-importer
-      title: ConfluenceImporter
+      route: pageflow
+      title: PageFlow
   function:
     - key: resolver
       handler: index.handler

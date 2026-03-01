@@ -1,4 +1,4 @@
-# Beads Workflow Context — ConfluenceImporter
+# Beads Workflow Context — PageFlow
 
 > **Context Recovery**: Run `bd prime` nach Compaction, Clear oder neuer Session.
 

@@ -1,8 +1,8 @@
 {
-  "name": "confluence-importer",
-  "version": "0.1.0",
+  "name": "pageflow",
+  "version": "0.2.0",
   "private": true,
-  "description": "Atlassian Forge app for content migration to Confluence",
+  "description": "Atlassian Forge app for content import/export with Confluence",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:frontend": "npm run build --workspace=src/frontend",

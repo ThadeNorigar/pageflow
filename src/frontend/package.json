@@ -1,5 +1,5 @@
 {
-  "name": "confluence-importer-frontend",
+  "name": "pageflow-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {

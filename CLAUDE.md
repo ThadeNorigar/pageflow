@@ -1,4 +1,4 @@
-# Projekt: ConfluenceImporter
+# Projekt: PageFlow
 
 > Diese Datei ist der zentrale Kontext für Claude Code. Sie wird bei jeder Konversation geladen.
 
@@ -41,9 +41,9 @@
 
 ---
 
-## Was ist ConfluenceImporter?
+## Was ist PageFlow?
 
-ConfluenceImporter ist eine **Atlassian Forge App** für den Confluence Marketplace, die Content-Migration nach Confluence ermöglicht:
+PageFlow ist eine **Atlassian Forge App** für den Confluence Marketplace, die Content-Migration nach Confluence ermöglicht:
 
 - **OneNote Cloud** → Confluence (via Microsoft Graph API)
 - **PDF/Dateien** → Confluence (via Drag&Drop Upload)
@@ -79,7 +79,7 @@ ConfluenceImporter ist eine **Atlassian Forge App** für den Confluence Marketpl
 ## Projektstruktur
 
 ```
-ConfluenceImporter/
+PageFlow/
 ├── manifest.yml                 # Forge App manifest (Scopes, Modules, Permissions)
 ├── package.json                 # Root package
 ├── tsconfig.json                # TypeScript config

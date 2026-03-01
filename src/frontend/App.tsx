@@ -18,7 +18,7 @@ const App: React.FC = () => {
   return (
     <div style={{ padding: '24px 32px', maxWidth: 960 }}>
       <h1 style={{ fontSize: 24, fontWeight: 600, color: '#172B4D', margin: '0 0 4px' }}>
-        ConfluenceImporter
+        PageFlow
       </h1>
       <p style={{ fontSize: 14, color: '#6B778C', margin: '0 0 24px' }}>
         Content-Migration nach Confluence
