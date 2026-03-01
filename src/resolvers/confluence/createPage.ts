@@ -4,6 +4,7 @@ interface CreatePagePayload {
   title: string;
   spaceId: string;
   parentId: string | null;
+  body?: string;
 }
 
 interface CreatePageResult {
@@ -25,7 +26,7 @@ export async function createPage(payload: CreatePagePayload): Promise<CreatePage
     title: payload.title,
     body: {
       representation: 'storage',
-      value: '',
+      value: payload.body ?? '',
     },
   };
 

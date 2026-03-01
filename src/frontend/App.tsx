@@ -4,6 +4,7 @@ import Tabs from './components/Tabs';
 import PageTree from './components/PageTree';
 import BatchImportPDF from './components/BatchImportPDF';
 import NotebookBrowser, { OneNoteSelection } from './components/NotebookBrowser';
+import ImportButton from './components/ImportButton';
 import { TabId, DEFAULT_TAB } from './utils/tabs';
 import { SpaceSelection } from './types';
 
@@ -73,6 +74,14 @@ const App: React.FC = () => {
                 <strong>{oneNoteSelection.pages.length}</strong> OneNote-Seite{oneNoteSelection.pages.length !== 1 ? 'n' : ''} ausgewählt
               </div>
             )}
+            <div style={{ marginTop: 12 }}>
+              <ImportButton
+                pages={oneNoteSelection.pages}
+                spaceId={selectedSpace?.id ?? ''}
+                parentId={selectedPageId}
+                disabled={!selectedSpace}
+              />
+            </div>
           </>
         )}
         {activeTab === 'pdf-export' && (

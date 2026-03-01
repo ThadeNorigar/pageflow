@@ -4,6 +4,7 @@ import { getPages } from './confluence/pages';
 import { createPage } from './confluence/createPage';
 import { checkAuthStatus, requestAuth, requestMicrosoftGraph } from './onenote/auth';
 import { getNotebooks, getSections, getPages as getOneNotePages } from './onenote/notebooks';
+import { importOneNotePage } from './onenote/import';
 
 const resolver = new Resolver();
 
@@ -45,6 +46,10 @@ resolver.define('getNotebookSections', async ({ payload }: { payload: { notebook
 
 resolver.define('getSectionPages', async ({ payload }: { payload: { sectionId: string } }) => {
   return getOneNotePages(payload.sectionId);
+});
+
+resolver.define('importOneNotePage', async ({ payload }: { payload: { pageId: string; title: string; spaceId: string; parentId: string | null } }) => {
+  return importOneNotePage(payload);
 });
 
 export const handler = resolver.getDefinitions();
