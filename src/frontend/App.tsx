@@ -3,6 +3,7 @@ import SpaceDropdown, { ConfluenceSpace } from './components/SpaceDropdown';
 import Tabs from './components/Tabs';
 import PageTree from './components/PageTree';
 import BatchImportPDF from './components/BatchImportPDF';
+import BatchExportPDF from './components/BatchExportPDF';
 import NotebookBrowser, { OneNoteSelection } from './components/NotebookBrowser';
 import ImportButton from './components/ImportButton';
 import { TabId, DEFAULT_TAB } from './utils/tabs';
@@ -85,19 +86,10 @@ const App: React.FC = () => {
           </>
         )}
         {activeTab === 'pdf-export' && (
-          <div style={{
-            padding: '32px 24px',
-            textAlign: 'center',
-            color: '#6B778C',
-            fontSize: 14,
-            backgroundColor: '#F4F5F7',
-            borderRadius: 8,
-            border: '1px solid #DFE1E6',
-          }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>&#128203;</div>
-            <div style={{ fontWeight: 500, color: '#172B4D', marginBottom: 4 }}>Batch Export PDF</div>
-            <div>Kommt in einer zukünftigen Version</div>
-          </div>
+          <BatchExportPDF
+            spaceKey={selectedSpace?.key ?? null}
+            spaceId={selectedSpace?.id ?? null}
+          />
         )}
       </div>
 

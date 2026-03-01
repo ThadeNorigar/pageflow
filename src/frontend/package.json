@@ -7,10 +7,11 @@
     "start": "webpack serve --config ../../webpack.config.js --mode development"
   },
   "dependencies": {
+    "@atlaskit/css-reset": "^6.11.0",
     "@forge/bridge": "^4.1.0",
+    "pdf-lib": "^1.17.1",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "@atlaskit/css-reset": "^6.11.0"
+    "react-dom": "^18.3.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",
