@@ -117,15 +117,17 @@ PageFlow/
 │       │   ├── SpaceDropdown.tsx # Filterable space dropdown
 │       │   ├── PageTree.tsx     # Page tree with lazy-loading (target selection)
 │       │   ├── Tabs.tsx         # Tab navigation (PDF Import, OneNote, PDF Export)
+│       │   ├── BatchImportPDF.tsx # Folder-based batch PDF import
 │       │   ├── SpaceBrowser.tsx  # Legacy space/page browser (deprecated)
 │       │   ├── NotebookBrowser.tsx # OneNote notebook tree
-│       │   ├── FileUpload.tsx   # Drag&Drop file upload
+│       │   ├── FileUpload.tsx   # Single-file PDF upload (legacy)
 │       │   ├── MigrationDashboard.tsx # Progress overview
 │       │   └── Settings.tsx     # Configuration UI
 │       ├── hooks/               # Custom React hooks
 │       │   ├── useForge.ts      # @forge/bridge wrapper
 │       │   └── useMigration.ts  # Migration state management
 │       └── utils/               # Frontend utilities
+│           ├── folderTree.ts    # Folder tree building from webkitdirectory
 │           ├── colors.ts        # Centralized ADS color constants
 │           ├── tabs.ts          # Tab definitions and validation
 │           ├── spaceFilter.ts   # Space search/filter logic
