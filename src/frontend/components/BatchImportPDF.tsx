@@ -2,8 +2,8 @@ import React, { useState, useCallback, useRef } from 'react';
 import { invoke, requestConfluence } from '@forge/bridge';
 import { SpaceSelection } from '../types';
 import { C } from '../utils/colors';
-import { buildFolderTree, flattenTree, countFiles, totalSize, FolderNode } from '../utils/folderTree';
-import { validateFile } from '../utils/fileValidation';
+import { buildFolderTree, countFiles, totalSize, FolderNode } from '../utils/folderTree';
+import { validateFile, titleFromFilename } from '../utils/fileValidation';
 
 interface BatchImportPDFProps {
   selection: SpaceSelection | null;
@@ -28,6 +28,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [results, setResults] = useState<ImportResult[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const cancelRef = useRef(false);
 
   const handleFolderSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -49,15 +50,22 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
     if (inputRef.current) inputRef.current.value = '';
   }, []);
 
+  const cancelImport = useCallback(() => {
+    cancelRef.current = true;
+  }, []);
+
   const startImport = useCallback(async () => {
     if (!tree || !selection || !spaceId) return;
 
+    cancelRef.current = false;
     setPhase('importing');
     const importResults: ImportResult[] = [];
     const total = countFiles(tree, includeSubfolders);
     setProgress({ current: 0, total });
 
     async function importFolder(node: FolderNode, parentId: string | null): Promise<void> {
+      if (cancelRef.current) return;
+
       // Create folder page
       let folderPageId = parentId;
       try {
@@ -74,11 +82,13 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
           status: 'error',
           error: err instanceof Error ? err.message : 'Ordner-Seite fehlgeschlagen',
         });
-        return; // Skip all files in this folder
+        return;
       }
 
       // Import PDFs in this folder
       for (const file of node.files) {
+        if (cancelRef.current) return;
+
         const validationErr = validateFile(file);
         if (validationErr) {
           importResults.push({ name: file.name, status: 'error', error: validationErr });
@@ -90,7 +100,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
           setCurrentFile(file.name);
 
           // Create page for PDF
-          const title = file.name.replace(/\.pdf$/i, '');
+          const title = titleFromFilename(file.name);
           const pageResult = await invoke<{ pageId: string }>('createPage', {
             title,
             spaceId,
@@ -125,6 +135,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
       // Recurse into subfolders
       if (includeSubfolders) {
         for (const child of node.children) {
+          if (cancelRef.current) return;
           await importFolder(child, folderPageId);
         }
       }
@@ -240,23 +251,28 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
           </div>
         )}
 
-        <button
-          onClick={startImport}
-          disabled={!selection || !spaceId || fileCount === 0 || fileCount > MAX_FILE_COUNT}
-          style={{
-            marginTop: 12,
-            padding: '8px 20px',
-            fontSize: 14,
-            fontWeight: 500,
-            color: !selection || fileCount === 0 || fileCount > MAX_FILE_COUNT ? C.N200 : '#fff',
-            backgroundColor: !selection || fileCount === 0 || fileCount > MAX_FILE_COUNT ? C.N20 : C.B400,
-            border: 'none',
-            borderRadius: 4,
-            cursor: !selection || fileCount === 0 || fileCount > MAX_FILE_COUNT ? 'default' : 'pointer',
-          }}
-        >
-          {fileCount} PDF{fileCount !== 1 ? 's' : ''} importieren
-        </button>
+        {(() => {
+          const canImport = !!selection && !!spaceId && fileCount > 0 && fileCount <= MAX_FILE_COUNT;
+          return (
+            <button
+              onClick={startImport}
+              disabled={!canImport}
+              style={{
+                marginTop: 12,
+                padding: '8px 20px',
+                fontSize: 14,
+                fontWeight: 500,
+                color: canImport ? '#fff' : C.N200,
+                backgroundColor: canImport ? C.B400 : C.N20,
+                border: 'none',
+                borderRadius: 4,
+                cursor: canImport ? 'pointer' : 'default',
+              }}
+            >
+              {fileCount} PDF{fileCount !== 1 ? 's' : ''} importieren
+            </button>
+          );
+        })()}
       </div>
     );
   }
@@ -272,7 +288,21 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
         <div style={{ height: 6, backgroundColor: C.N20, borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
           <div style={{ height: '100%', width: `${pct}%`, backgroundColor: C.B400, borderRadius: 3, transition: 'width 0.3s' }} />
         </div>
-        <div style={{ fontSize: 13, color: C.N200 }}>{currentFile}</div>
+        <div style={{ fontSize: 13, color: C.N200, marginBottom: 12 }}>{currentFile}</div>
+        <button
+          onClick={cancelImport}
+          style={{
+            padding: '6px 16px',
+            fontSize: 13,
+            color: C.R400,
+            backgroundColor: 'transparent',
+            border: `1px solid ${C.R400}`,
+            borderRadius: 4,
+            cursor: 'pointer',
+          }}
+        >
+          Abbrechen
+        </button>
       </div>
     );
   }
