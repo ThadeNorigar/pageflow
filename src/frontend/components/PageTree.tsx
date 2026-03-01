@@ -1,0 +1,189 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import { invoke } from '@forge/bridge';
+
+export interface ConfluencePage {
+  id: string;
+  title: string;
+  spaceKey: string;
+  parentId: string | null;
+  hasChildren: boolean;
+  isFolder?: boolean;
+}
+
+interface PageTreeProps {
+  spaceKey: string;
+  spaceId: string;
+  selectedPageId: string | null;
+  onSelectPage: (pageId: string | null) => void;
+}
+
+const C = {
+  N800: '#172B4D',
+  N200: '#6B778C',
+  N40: '#DFE1E6',
+  N20: '#F4F5F7',
+  N10: '#FAFBFC',
+  B400: '#0052CC',
+  B75: '#DEEBFF',
+  R400: '#DE350B',
+};
+
+const Spinner: React.FC = () => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 12px', color: C.N200, fontSize: 14 }}>
+    <svg width="16" height="16" viewBox="0 0 16 16" style={{ animation: 'spin 0.8s linear infinite' }}>
+      <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="28" strokeLinecap="round" />
+    </svg>
+    Loading...
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
+
+interface PageNodeProps {
+  page: ConfluencePage;
+  depth: number;
+  selectedPageId: string | null;
+  onSelectPage: (page: ConfluencePage) => void;
+  allPages: ConfluencePage[];
+}
+
+const PageNode: React.FC<PageNodeProps> = ({ page, depth, selectedPageId, onSelectPage, allPages }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
+  const children = allPages.filter(p => p.parentId === page.id);
+  const hasChildren = children.length > 0;
+  const isSelected = selectedPageId === page.id;
+
+  return (
+    <div>
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          padding: '6px 12px',
+          paddingLeft: depth * 20 + 12,
+          cursor: 'pointer',
+          backgroundColor: isSelected ? C.B75 : hovered ? C.N20 : 'transparent',
+          borderRadius: 3,
+          margin: '1px 4px',
+          transition: 'background-color 0.1s',
+          fontSize: 14,
+          color: C.N800,
+          lineHeight: '20px',
+        }}
+        onClick={() => onSelectPage(page)}
+      >
+        {hasChildren && (
+          <span
+            onClick={(e) => { e.stopPropagation(); setExpanded(prev => !prev); }}
+            style={{
+              marginRight: 6,
+              width: 16,
+              height: 16,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 10,
+              color: C.N200,
+              flexShrink: 0,
+              borderRadius: 3,
+              userSelect: 'none',
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" style={{ transform: expanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>
+              <path d="M10 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+        )}
+        {!hasChildren && <span style={{ width: 22, display: 'inline-block', flexShrink: 0 }} />}
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{page.title}</span>
+      </div>
+      {expanded && children.map((child) => (
+        <PageNode key={child.id} page={child} depth={depth + 1} selectedPageId={selectedPageId} onSelectPage={onSelectPage} allPages={allPages} />
+      ))}
+    </div>
+  );
+};
+
+const PageTree: React.FC<PageTreeProps> = ({ spaceKey, spaceId, selectedPageId, onSelectPage }) => {
+  const [pages, setPages] = useState<ConfluencePage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPages([]);
+    setLoading(true);
+    setError(null);
+    invoke<ConfluencePage[]>('getPages', { spaceKey, spaceId })
+      .then(setPages)
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [spaceKey, spaceId]);
+
+  const handleSelectPage = useCallback((page: ConfluencePage) => {
+    onSelectPage(page.id);
+  }, [onSelectPage]);
+
+  const rootPages = pages.filter(p => {
+    if (p.parentId === null) return true;
+    return !pages.some(other => other.id === p.parentId);
+  });
+
+  return (
+    <div style={{
+      border: `1px solid ${C.N40}`,
+      borderRadius: 8,
+      overflow: 'hidden',
+      boxShadow: '0 1px 3px rgba(9, 30, 66, 0.08)',
+    }}>
+      <div style={{
+        padding: '10px 12px',
+        fontSize: 11,
+        fontWeight: 700,
+        color: C.N200,
+        textTransform: 'uppercase',
+        letterSpacing: '0.04em',
+        borderBottom: `1px solid ${C.N40}`,
+        backgroundColor: C.N10,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <span>Ziel-Seite</span>
+        {selectedPageId && (
+          <span
+            onClick={() => onSelectPage(null)}
+            style={{
+              fontSize: 11,
+              fontWeight: 500,
+              color: C.B400,
+              cursor: 'pointer',
+              textTransform: 'none',
+              letterSpacing: 'normal',
+            }}
+          >
+            Space Root
+          </span>
+        )}
+      </div>
+      <div style={{ maxHeight: 300, overflowY: 'auto', backgroundColor: '#fff' }}>
+        {loading && <Spinner />}
+        {error && <div style={{ padding: 12, color: C.R400, fontSize: 13 }}>{error}</div>}
+        {!loading && !error && rootPages.length === 0 && (
+          <div style={{ padding: '16px 12px', color: C.N200, fontSize: 14, textAlign: 'center' }}>
+            Keine Seiten in diesem Space
+          </div>
+        )}
+        <div style={{ padding: '4px 0' }}>
+          {rootPages.map((page) => (
+            <PageNode key={page.id} page={page} depth={0} selectedPageId={selectedPageId} onSelectPage={handleSelectPage} allPages={pages} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PageTree;

@@ -1,22 +1,39 @@
 import React, { useState, useCallback } from 'react';
-import SpaceBrowser, { SpaceSelection } from './components/SpaceBrowser';
-import NotebookBrowser, { OneNoteSelection } from './components/NotebookBrowser';
+import SpaceDropdown, { ConfluenceSpace } from './components/SpaceDropdown';
+import Tabs from './components/Tabs';
+import PageTree from './components/PageTree';
 import FileUpload from './components/FileUpload';
+import NotebookBrowser, { OneNoteSelection } from './components/NotebookBrowser';
+import { TabId, DEFAULT_TAB } from './utils/tabs';
+import { SpaceSelection } from './types';
+
+const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif";
 
 const App: React.FC = () => {
-  const [selection, setSelection] = useState<SpaceSelection | null>(null);
+  const [selectedSpace, setSelectedSpace] = useState<ConfluenceSpace | null>(null);
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabId>(DEFAULT_TAB);
   const [oneNoteSelection, setOneNoteSelection] = useState<OneNoteSelection>({ pages: [] });
 
-  const handleSelect = useCallback((sel: SpaceSelection) => {
-    setSelection(sel);
+  const handleSpaceChange = useCallback((space: ConfluenceSpace) => {
+    setSelectedSpace(space);
+    setSelectedPageId(null);
+  }, []);
+
+  const handlePageChange = useCallback((pageId: string | null) => {
+    setSelectedPageId(pageId);
   }, []);
 
   const handleOneNoteChange = useCallback((sel: OneNoteSelection) => {
     setOneNoteSelection(sel);
   }, []);
 
+  const selection: SpaceSelection | null = selectedSpace
+    ? { spaceKey: selectedSpace.key, spaceId: selectedSpace.id, pageId: selectedPageId }
+    : null;
+
   return (
-    <div style={{ padding: '24px 32px', maxWidth: 960 }}>
+    <div style={{ padding: '24px 32px', maxWidth: 960, fontFamily: FONT }}>
       <h1 style={{ fontSize: 24, fontWeight: 600, color: '#172B4D', margin: '0 0 4px' }}>
         PageFlow
       </h1>
@@ -24,51 +41,85 @@ const App: React.FC = () => {
         Content-Migration nach Confluence
       </p>
 
-      <h2 style={{ fontSize: 16, fontWeight: 600, color: '#172B4D', margin: '0 0 12px' }}>
-        Quelle
-      </h2>
-      <NotebookBrowser onSelectionChange={handleOneNoteChange} />
+      {/* Space Dropdown */}
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B778C', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          Ziel-Space
+        </label>
+        <SpaceDropdown selectedSpace={selectedSpace} onSelectSpace={handleSpaceChange} />
+      </div>
 
-      {oneNoteSelection.pages.length > 0 && (
-        <div style={{
-          marginTop: 16,
-          padding: '10px 14px',
-          backgroundColor: '#DEEBFF',
-          borderRadius: 6,
-          fontSize: 14,
-          color: '#172B4D',
-          lineHeight: '20px',
-          border: '1px solid #B3D4FF',
-        }}>
-          <strong>{oneNoteSelection.pages.length}</strong> OneNote-Seite{oneNoteSelection.pages.length !== 1 ? 'n' : ''} ausgewählt
-        </div>
+      {/* Tabs */}
+      <Tabs activeTab={activeTab} onChangeTab={setActiveTab} />
+
+      {/* Tab Content */}
+      <div style={{ padding: '20px 0' }}>
+        {activeTab === 'pdf-import' && (
+          <FileUpload selection={selection} spaceId={selectedSpace?.id ?? null} />
+        )}
+        {activeTab === 'onenote-import' && (
+          <>
+            <NotebookBrowser onSelectionChange={handleOneNoteChange} />
+            {oneNoteSelection.pages.length > 0 && (
+              <div style={{
+                marginTop: 12,
+                padding: '10px 14px',
+                backgroundColor: '#DEEBFF',
+                borderRadius: 6,
+                fontSize: 14,
+                color: '#172B4D',
+                border: '1px solid #B3D4FF',
+              }}>
+                <strong>{oneNoteSelection.pages.length}</strong> OneNote-Seite{oneNoteSelection.pages.length !== 1 ? 'n' : ''} ausgewählt
+              </div>
+            )}
+          </>
+        )}
+        {activeTab === 'pdf-export' && (
+          <div style={{
+            padding: '32px 24px',
+            textAlign: 'center',
+            color: '#6B778C',
+            fontSize: 14,
+            backgroundColor: '#F4F5F7',
+            borderRadius: 8,
+            border: '1px solid #DFE1E6',
+          }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>&#128203;</div>
+            <div style={{ fontWeight: 500, color: '#172B4D', marginBottom: 4 }}>Batch Export PDF</div>
+            <div>Kommt in einer zukünftigen Version</div>
+          </div>
+        )}
+      </div>
+
+      {/* Shared Page Tree (target selection) */}
+      {selectedSpace && (
+        <PageTree
+          spaceKey={selectedSpace.key}
+          spaceId={selectedSpace.id}
+          selectedPageId={selectedPageId}
+          onSelectPage={handlePageChange}
+        />
       )}
 
-      <h2 style={{ fontSize: 16, fontWeight: 600, color: '#172B4D', margin: '24px 0 12px' }}>
-        Ziel
-      </h2>
-      <SpaceBrowser onSelect={handleSelect} />
-
+      {/* Selection Summary */}
       {selection && (
         <div style={{
-          marginTop: 16,
+          marginTop: 12,
           padding: '10px 14px',
           backgroundColor: '#E3FCEF',
           borderRadius: 6,
           fontSize: 14,
           color: '#172B4D',
-          lineHeight: '20px',
           border: '1px solid #ABF5D1',
         }}>
-          Space: <strong>{selection.spaceKey}</strong>
+          Ziel: <strong>{selection.spaceKey}</strong>
           {selection.pageId
-            ? <> | Page ID: <strong>{selection.pageId}</strong></>
+            ? <> | Seite: <strong>{selection.pageId}</strong></>
             : <> | <em style={{ color: '#6B778C' }}>Space Root</em></>
           }
         </div>
       )}
-
-      <FileUpload selection={selection} spaceId={selection?.spaceId ?? null} />
     </div>
   );
 };

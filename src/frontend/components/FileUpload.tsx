@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { invoke, requestConfluence } from '@forge/bridge';
-import { SpaceSelection } from './SpaceBrowser';
+import { SpaceSelection } from '../types';
 import { validateFile, titleFromFilename } from '../utils/fileValidation';
 
 interface FileUploadProps {
@@ -148,11 +148,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ selection, spaceId }) => {
   const disabled = !selection || !spaceId || pendingCount === 0 || uploading;
 
   return (
-    <div style={{ marginTop: 24 }}>
-      <h2 style={{ fontSize: 16, fontWeight: 600, color: C.N800, margin: '0 0 12px' }}>
-        PDF Upload
-      </h2>
-
+    <div>
       {/* Drop Zone */}
       <div
         onDrop={handleDrop}
