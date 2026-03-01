@@ -17,7 +17,7 @@ export interface OneNotePage {
   lastModifiedDateTime: string;
 }
 
-const ONENOTE_ID_PATTERN = /^[a-f0-9!-]+$/i;
+const ONENOTE_ID_PATTERN = /^[a-zA-Z0-9!-]+$/;
 
 function validateId(id: string, label: string): void {
   if (!id || !ONENOTE_ID_PATTERN.test(id)) {

@@ -47,9 +47,7 @@ export async function checkAuthStatus(): Promise<{
 
 export async function requestAuth(): Promise<void> {
   const provider = getProvider();
-  if (!(await provider.hasCredentials())) {
-    await provider.requestCredentials();
-  }
+  await provider.requestCredentials();
 }
 
 export async function requestMicrosoftGraph<T>(path: string): Promise<T> {

@@ -23,7 +23,7 @@ providers:
         - profile
         - offline_access
         - User.Read
-        - Notes.Read.All
+        - Notes.Read
       remotes:
         - microsoft-graph-api
       bearerMethod: authorization-header
@@ -34,12 +34,10 @@ providers:
         exchange:
           remote: microsoft-login
           path: /common/oauth2/v2.0/token
-        refreshToken:
-          remote: microsoft-login
-          path: /common/oauth2/v2.0/token
-        revokeToken:
-          remote: microsoft-login
-          path: /common/oauth2/v2.0/logout
+          resolvers:
+            accessToken: access_token
+            accessTokenExpires: expires_in
+            refreshToken: refresh_token
         retrieveProfile:
           remote: microsoft-graph-api
           path: /v1.0/me

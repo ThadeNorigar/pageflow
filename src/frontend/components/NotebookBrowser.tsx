@@ -332,7 +332,17 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
       <div style={{ maxHeight: 400, overflowY: 'auto', backgroundColor: '#fff' }}>
         {loading && <Spinner />}
         {error && (
-          <div style={{ padding: 12, color: C.R400, fontSize: 13, lineHeight: '18px' }}>{error}</div>
+          <div style={{ padding: 12, fontSize: 13, lineHeight: '18px' }}>
+            <div style={{ color: C.R400, marginBottom: 8 }}>{error}</div>
+            {error.includes('401') && (
+              <button
+                onClick={connectAccount}
+                style={{ padding: '4px 12px', fontSize: 12, color: C.B400, background: C.N20, border: `1px solid ${C.N40}`, borderRadius: 3, cursor: 'pointer' }}
+              >
+                Reconnect Microsoft Account
+              </button>
+            )}
+          </div>
         )}
         {!loading && notebooks.length === 0 && !error && (
           <div style={{ padding: '24px 16px', color: C.N200, fontSize: 14, textAlign: 'center' }}>
