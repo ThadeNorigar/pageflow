@@ -18,8 +18,8 @@ export async function getPageBody(pageId: string): Promise<PageBody> {
   const response = await api.asUser().requestConfluence(safeUrl, { method: 'GET' });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Failed to fetch page: ${response.status} ${text}`);
+    await response.text();
+    throw new Error(`Failed to fetch page: ${response.status}`);
   }
 
   const data = await response.json();

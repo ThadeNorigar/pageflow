@@ -134,6 +134,6 @@ describe('getPageBody', () => {
       apiResponse({ message: 'Page not found' }, false, 404)
     );
 
-    await expect(getPageBody('99999')).rejects.toThrow(/404|not found/i);
+    await expect(getPageBody('99999')).rejects.toThrow(/404/);
   });
 });

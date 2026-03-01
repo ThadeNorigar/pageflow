@@ -26,9 +26,13 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
 
   const handleStationeryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type === 'application/pdf') {
-      setStationeryFile(file);
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Briefpapier-PDF darf max. 5 MB gross sein');
+      return;
     }
+    setStationeryFile(file);
   }, []);
 
   const reset = useCallback(() => {
@@ -50,11 +54,15 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
     setProgress({ current: 0, total: pageIds.length });
 
     try {
-      // Load stationery bytes
+      // Load and validate stationery bytes
       let stationeryBytes: Uint8Array | undefined;
       if (stationeryFile) {
         const buffer = await stationeryFile.arrayBuffer();
-        stationeryBytes = new Uint8Array(buffer);
+        const bytes = new Uint8Array(buffer);
+        if (bytes.length < 5 || String.fromCharCode(...bytes.slice(0, 5)) !== '%PDF-') {
+          throw new Error('Ungültige Briefpapier-Datei (kein gültiges PDF)');
+        }
+        stationeryBytes = bytes;
       }
 
       // Fetch page bodies
