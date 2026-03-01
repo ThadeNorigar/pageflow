@@ -70,6 +70,33 @@ describe('buildFolderTree', () => {
     const file = makeFile('empty.pdf', 'Folder/empty.pdf', 0);
     expect(buildFolderTree([file])).toBeNull();
   });
+
+  it('falls back to file.name when webkitRelativePath is missing', () => {
+    const file = new File(['x'], 'standalone.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'size', { value: 1024 });
+    const tree = buildFolderTree([file]);
+    expect(tree).not.toBeNull();
+    expect(tree!.name).toBe('standalone.pdf');
+    expect(tree!.files).toHaveLength(1);
+  });
+
+  it('groups multiple files into the same subfolder', () => {
+    const files = [
+      makeFile('a.pdf', 'Root/Shared/a.pdf'),
+      makeFile('b.pdf', 'Root/Shared/b.pdf'),
+    ];
+    const tree = buildFolderTree(files);
+    expect(tree!.children).toHaveLength(1);
+    expect(tree!.children[0].name).toBe('Shared');
+    expect(tree!.children[0].files).toHaveLength(2);
+  });
+
+  it('handles case-insensitive .PDF extension', () => {
+    const file = makeFile('DOC.PDF', 'Folder/DOC.PDF');
+    const tree = buildFolderTree([file]);
+    expect(tree).not.toBeNull();
+    expect(tree!.files[0].name).toBe('DOC.PDF');
+  });
 });
 
 describe('flattenTree', () => {
@@ -109,6 +136,12 @@ describe('flattenTree', () => {
     expect(pdfs).toHaveLength(1); // root.pdf only
   });
 
+  it('returns empty array for tree with no files and no children', () => {
+    const emptyTree: FolderNode = { name: 'Empty', path: '', files: [], children: [] };
+    const items = flattenTree(emptyTree, true);
+    expect(items).toHaveLength(0);
+  });
+
   it('items have correct order (folder before its files)', () => {
     const items = flattenTree(tree, true);
     expect(items[0]).toMatchObject({ type: 'folder', name: 'Root' });
@@ -134,6 +167,12 @@ describe('countFiles', () => {
   it('counts all files with subfolders', () => {
     expect(countFiles(tree, true)).toBe(3);
   });
+
+  it('returns 0 for empty tree', () => {
+    const empty: FolderNode = { name: 'E', path: '', files: [], children: [] };
+    expect(countFiles(empty, true)).toBe(0);
+    expect(countFiles(empty, false)).toBe(0);
+  });
 });
 
 describe('totalSize', () => {
@@ -152,5 +191,11 @@ describe('totalSize', () => {
 
   it('sums all file sizes with subfolders', () => {
     expect(totalSize(tree, true)).toBe(3000);
+  });
+
+  it('returns 0 for empty tree', () => {
+    const empty: FolderNode = { name: 'E', path: '', files: [], children: [] };
+    expect(totalSize(empty, true)).toBe(0);
+    expect(totalSize(empty, false)).toBe(0);
   });
 });

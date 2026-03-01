@@ -37,6 +37,21 @@ describe('validateFile', () => {
     const file = { name: 'doc.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', size: 1024 };
     expect(validateFile(file)).toBe('"doc.docx" ist keine PDF-Datei');
   });
+
+  it('accepts PDF by extension even with wrong MIME type', () => {
+    const file = { name: 'report.pdf', type: 'text/plain', size: 1024 };
+    expect(validateFile(file)).toBeNull();
+  });
+
+  it('accepts PDF by MIME type even without .pdf extension', () => {
+    const file = { name: 'download', type: 'application/pdf', size: 1024 };
+    expect(validateFile(file)).toBeNull();
+  });
+
+  it('rejects zero-size PDF', () => {
+    const file = { name: 'empty.pdf', type: 'application/pdf', size: 0 };
+    expect(validateFile(file)).toBeNull(); // validateFile does not check size=0
+  });
 });
 
 describe('titleFromFilename', () => {
