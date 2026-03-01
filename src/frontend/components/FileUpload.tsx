@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { invoke, requestConfluence } from '@forge/bridge';
 import { SpaceSelection } from '../types';
 import { validateFile, titleFromFilename } from '../utils/fileValidation';
+import { C } from '../utils/colors';
 
 interface FileUploadProps {
   selection: SpaceSelection | null;
@@ -15,20 +16,6 @@ interface UploadFile {
   error?: string;
   pageId?: string;
 }
-
-const C = {
-  N900: '#091E42',
-  N800: '#172B4D',
-  N200: '#6B778C',
-  N40: '#DFE1E6',
-  N20: '#F4F5F7',
-  B400: '#0052CC',
-  B75: '#DEEBFF',
-  R400: '#DE350B',
-  R75: '#FFEBE6',
-  G400: '#00875A',
-  G75: '#E3FCEF',
-};
 
 const FileUpload: React.FC<FileUploadProps> = ({ selection, spaceId }) => {
   const [files, setFiles] = useState<UploadFile[]>([]);

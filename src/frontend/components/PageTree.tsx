@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { invoke } from '@forge/bridge';
+import { C } from '../utils/colors';
 
 export interface ConfluencePage {
   id: string;
@@ -17,17 +18,6 @@ interface PageTreeProps {
   onSelectPage: (pageId: string | null) => void;
 }
 
-const C = {
-  N800: '#172B4D',
-  N200: '#6B778C',
-  N40: '#DFE1E6',
-  N20: '#F4F5F7',
-  N10: '#FAFBFC',
-  B400: '#0052CC',
-  B75: '#DEEBFF',
-  R400: '#DE350B',
-};
-
 const Spinner: React.FC = () => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 12px', color: C.N200, fontSize: 14 }}>
     <svg width="16" height="16" viewBox="0 0 16 16" style={{ animation: 'spin 0.8s linear infinite' }}>
@@ -43,14 +33,14 @@ interface PageNodeProps {
   depth: number;
   selectedPageId: string | null;
   onSelectPage: (page: ConfluencePage) => void;
-  allPages: ConfluencePage[];
+  childrenMap: Map<string | null, ConfluencePage[]>;
 }
 
-const PageNode: React.FC<PageNodeProps> = ({ page, depth, selectedPageId, onSelectPage, allPages }) => {
+const PageNode: React.FC<PageNodeProps> = ({ page, depth, selectedPageId, onSelectPage, childrenMap }) => {
   const [expanded, setExpanded] = useState(false);
   const [hovered, setHovered] = useState(false);
 
-  const children = allPages.filter(p => p.parentId === page.id);
+  const children = childrenMap.get(page.id) ?? [];
   const hasChildren = children.length > 0;
   const isSelected = selectedPageId === page.id;
 
@@ -101,7 +91,7 @@ const PageNode: React.FC<PageNodeProps> = ({ page, depth, selectedPageId, onSele
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{page.title}</span>
       </div>
       {expanded && children.map((child) => (
-        <PageNode key={child.id} page={child} depth={depth + 1} selectedPageId={selectedPageId} onSelectPage={onSelectPage} allPages={allPages} />
+        <PageNode key={child.id} page={child} depth={depth + 1} selectedPageId={selectedPageId} onSelectPage={onSelectPage} childrenMap={childrenMap} />
       ))}
     </div>
   );
@@ -126,10 +116,18 @@ const PageTree: React.FC<PageTreeProps> = ({ spaceKey, spaceId, selectedPageId, 
     onSelectPage(page.id);
   }, [onSelectPage]);
 
-  const rootPages = pages.filter(p => {
-    if (p.parentId === null) return true;
-    return !pages.some(other => other.id === p.parentId);
-  });
+  const { childrenMap, rootPages } = useMemo(() => {
+    const map = new Map<string | null, ConfluencePage[]>();
+    const pageIds = new Set(pages.map(p => p.id));
+    for (const p of pages) {
+      const key = p.parentId;
+      const list = map.get(key);
+      if (list) list.push(p);
+      else map.set(key, [p]);
+    }
+    const roots = pages.filter(p => p.parentId === null || !pageIds.has(p.parentId));
+    return { childrenMap: map, rootPages: roots };
+  }, [pages]);
 
   return (
     <div style={{
@@ -178,7 +176,7 @@ const PageTree: React.FC<PageTreeProps> = ({ spaceKey, spaceId, selectedPageId, 
         )}
         <div style={{ padding: '4px 0' }}>
           {rootPages.map((page) => (
-            <PageNode key={page.id} page={page} depth={0} selectedPageId={selectedPageId} onSelectPage={handleSelectPage} allPages={pages} />
+            <PageNode key={page.id} page={page} depth={0} selectedPageId={selectedPageId} onSelectPage={handleSelectPage} childrenMap={childrenMap} />
           ))}
         </div>
       </div>

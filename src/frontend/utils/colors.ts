@@ -1,0 +1,15 @@
+export const C = {
+  N900: '#091E42',
+  N800: '#172B4D',
+  N200: '#6B778C',
+  N40: '#DFE1E6',
+  N20: '#F4F5F7',
+  N10: '#FAFBFC',
+  B400: '#0052CC',
+  B75: '#DEEBFF',
+  B50: '#E6FCFF',
+  R400: '#DE350B',
+  R75: '#FFEBE6',
+  G400: '#00875A',
+  G75: '#E3FCEF',
+};

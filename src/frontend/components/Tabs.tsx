@@ -1,17 +1,11 @@
 import React from 'react';
 import { TABS, TabId } from '../utils/tabs';
+import { C } from '../utils/colors';
 
 interface TabsProps {
   activeTab: TabId;
   onChangeTab: (tab: TabId) => void;
 }
-
-const C = {
-  N800: '#172B4D',
-  N200: '#6B778C',
-  N40: '#DFE1E6',
-  B400: '#0052CC',
-};
 
 const Tabs: React.FC<TabsProps> = ({ activeTab, onChangeTab }) => (
   <div style={{

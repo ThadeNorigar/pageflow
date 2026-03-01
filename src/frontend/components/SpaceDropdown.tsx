@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { invoke } from '@forge/bridge';
 import { filterSpaces } from '../utils/spaceFilter';
+import { C } from '../utils/colors';
 
 export interface ConfluenceSpace {
   id: string;
@@ -13,16 +14,6 @@ interface SpaceDropdownProps {
   selectedSpace: ConfluenceSpace | null;
   onSelectSpace: (space: ConfluenceSpace) => void;
 }
-
-const C = {
-  N800: '#172B4D',
-  N200: '#6B778C',
-  N40: '#DFE1E6',
-  N20: '#F4F5F7',
-  B400: '#0052CC',
-  B75: '#DEEBFF',
-  R400: '#DE350B',
-};
 
 const SpaceDropdown: React.FC<SpaceDropdownProps> = ({ selectedSpace, onSelectSpace }) => {
   const [spaces, setSpaces] = useState<ConfluenceSpace[]>([]);
