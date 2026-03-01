@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import SpaceDropdown, { ConfluenceSpace } from './components/SpaceDropdown';
 import Tabs from './components/Tabs';
 import PageTree from './components/PageTree';
-import FileUpload from './components/FileUpload';
+import BatchImportPDF from './components/BatchImportPDF';
 import NotebookBrowser, { OneNoteSelection } from './components/NotebookBrowser';
 import { TabId, DEFAULT_TAB } from './utils/tabs';
 import { SpaceSelection } from './types';
@@ -55,7 +55,7 @@ const App: React.FC = () => {
       {/* Tab Content */}
       <div style={{ padding: '20px 0' }}>
         {activeTab === 'pdf-import' && (
-          <FileUpload selection={selection} spaceId={selectedSpace?.id ?? null} />
+          <BatchImportPDF selection={selection} spaceId={selectedSpace?.id ?? null} />
         )}
         {activeTab === 'onenote-import' && (
           <>
