@@ -107,6 +107,9 @@ PageFlow/
 │   │   │   ├── engine.ts        # Batch processing + progress
 │   │   │   ├── queue.ts         # Job queue management
 │   │   │   └── mapping.ts       # Structure mapping logic
+│   │   ├── export/              # PDF export
+│   │   │   ├── storageParser.ts # Confluence Storage Format → ContentBlocks
+│   │   │   └── pageContent.ts   # Page body fetcher (v2 API + parser)
 │   │   ├── pdf/                 # PDF processing
 │   │   │   └── processor.ts     # PDF attachment + text extraction
 │   │   └── storage/             # Forge Storage abstraction
@@ -121,6 +124,8 @@ PageFlow/
 │       │   ├── Tabs.tsx         # Tab navigation (PDF Import, OneNote, PDF Export)
 │       │   ├── BatchImportPDF.tsx # Folder-based batch PDF import
 │       │   ├── ImportButton.tsx # OneNote import trigger with progress
+│       │   ├── BatchExportPDF.tsx # Batch PDF export with stationery
+│       │   ├── ExportPageTree.tsx # Checkbox-based page selection tree
 │       │   ├── SpaceBrowser.tsx  # Legacy space/page browser (deprecated)
 │       │   ├── NotebookBrowser.tsx # OneNote notebook tree
 │       │   ├── FileUpload.tsx   # Single-file PDF upload (legacy)
@@ -133,6 +138,7 @@ PageFlow/
 │           ├── folderTree.ts    # Folder tree building from webkitdirectory
 │           ├── colors.ts        # Centralized ADS color constants
 │           ├── tabs.ts          # Tab definitions and validation
+│           ├── pdfExport.ts     # pdf-lib PDF generation + stationery overlay
 │           ├── spaceFilter.ts   # Space search/filter logic
 │           └── format.ts        # Formatting helpers
 ├── tests/                       # Test files (mirror src/ structure)
