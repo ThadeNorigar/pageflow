@@ -112,8 +112,12 @@ PageFlow/
 │   └── frontend/                # React Custom UI
 │       ├── index.tsx            # App entry point
 │       ├── App.tsx              # Main app component
+│       ├── types.ts             # Shared frontend types (SpaceSelection)
 │       ├── components/          # Reusable UI components
-│       │   ├── SpaceBrowser.tsx  # Confluence space/page tree
+│       │   ├── SpaceDropdown.tsx # Filterable space dropdown
+│       │   ├── PageTree.tsx     # Page tree with lazy-loading (target selection)
+│       │   ├── Tabs.tsx         # Tab navigation (PDF Import, OneNote, PDF Export)
+│       │   ├── SpaceBrowser.tsx  # Legacy space/page browser (deprecated)
 │       │   ├── NotebookBrowser.tsx # OneNote notebook tree
 │       │   ├── FileUpload.tsx   # Drag&Drop file upload
 │       │   ├── MigrationDashboard.tsx # Progress overview
@@ -122,6 +126,9 @@ PageFlow/
 │       │   ├── useForge.ts      # @forge/bridge wrapper
 │       │   └── useMigration.ts  # Migration state management
 │       └── utils/               # Frontend utilities
+│           ├── colors.ts        # Centralized ADS color constants
+│           ├── tabs.ts          # Tab definitions and validation
+│           ├── spaceFilter.ts   # Space search/filter logic
 │           └── format.ts        # Formatting helpers
 ├── tests/                       # Test files (mirror src/ structure)
 │   ├── resolvers/
