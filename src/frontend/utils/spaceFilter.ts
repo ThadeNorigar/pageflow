@@ -4,7 +4,7 @@ export interface FilterableSpace {
   name: string;
 }
 
-export function filterSpaces(spaces: FilterableSpace[], query: string): FilterableSpace[] {
+export function filterSpaces<T extends FilterableSpace>(spaces: T[], query: string): T[] {
   if (!query.trim()) return spaces;
   const q = query.toLowerCase().trim();
   return spaces.filter(s =>
