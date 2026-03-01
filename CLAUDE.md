@@ -100,6 +100,8 @@ PageFlow/
 │   │   ├── onenote/             # OneNote/MS Graph integration
 │   │   │   ├── auth.ts          # OAuth2 token management
 │   │   │   ├── notebooks.ts     # Notebook/Section/Page browsing
+│   │   │   ├── import.ts        # OneNote page import (Graph → Confluence)
+│   │   │   ├── htmlToText.ts    # HTML→text + Storage Format conversion
 │   │   │   └── converter.ts     # OneNote HTML → Storage Format
 │   │   ├── migration/           # Migration engine
 │   │   │   ├── engine.ts        # Batch processing + progress
@@ -118,6 +120,7 @@ PageFlow/
 │       │   ├── PageTree.tsx     # Page tree with lazy-loading (target selection)
 │       │   ├── Tabs.tsx         # Tab navigation (PDF Import, OneNote, PDF Export)
 │       │   ├── BatchImportPDF.tsx # Folder-based batch PDF import
+│       │   ├── ImportButton.tsx # OneNote import trigger with progress
 │       │   ├── SpaceBrowser.tsx  # Legacy space/page browser (deprecated)
 │       │   ├── NotebookBrowser.tsx # OneNote notebook tree
 │       │   ├── FileUpload.tsx   # Single-file PDF upload (legacy)
