@@ -48,3 +48,50 @@ export async function createPage(payload: CreatePagePayload): Promise<CreatePage
   const data = await response.json();
   return { pageId: data.id, title: data.title };
 }
+
+interface UpdatePageBodyPayload {
+  pageId: string;
+  title: string;
+  body: string;
+}
+
+export async function updatePageBody(payload: UpdatePageBodyPayload): Promise<void> {
+  if (!payload.pageId) {
+    throw new Error('pageId must not be empty');
+  }
+
+  const getResp = await api.asUser().requestConfluence(route`/wiki/api/v2/pages/${payload.pageId}`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' },
+  });
+
+  if (!getResp.ok) {
+    const text = await getResp.text();
+    throw new Error(`Failed to get page: ${getResp.status} ${text}`);
+  }
+
+  const current = await getResp.json();
+  const nextVersion = (current.version?.number ?? 1) + 1;
+
+  const response = await api.asUser().requestConfluence(route`/wiki/api/v2/pages/${payload.pageId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id: payload.pageId,
+      status: 'current',
+      title: payload.title,
+      body: {
+        representation: 'storage',
+        value: payload.body,
+      },
+      version: {
+        number: nextVersion,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to update page: ${response.status} ${text}`);
+  }
+}

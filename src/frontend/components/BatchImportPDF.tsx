@@ -134,7 +134,6 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
             title,
             spaceId,
             parentId: folderPageId,
-            body: viewFileMacro(file.name),
           });
 
           const fileBase64 = await fileToBase64(file);
@@ -143,6 +142,12 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
             filename: file.name,
             fileBase64,
             mimeType: file.type || 'application/pdf',
+          });
+
+          await invoke('updatePageBody', {
+            pageId: pageResult.pageId,
+            title,
+            body: viewFileMacro(file.name),
           });
 
           importResults.push({ name: file.name, status: 'done' });

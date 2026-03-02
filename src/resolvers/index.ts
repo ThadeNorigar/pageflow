@@ -1,7 +1,7 @@
 import Resolver from '@forge/resolver';
 import { getSpaces } from './confluence/spaces';
 import { getPages } from './confluence/pages';
-import { createPage } from './confluence/createPage';
+import { createPage, updatePageBody } from './confluence/createPage';
 import { uploadAttachment } from './confluence/attachments';
 import { checkAuthStatus, requestAuth, requestMicrosoftGraph } from './onenote/auth';
 import { getNotebooks, getSections, getPages as getOneNotePages } from './onenote/notebooks';
@@ -40,6 +40,10 @@ resolver.define('createPage', async ({ payload }: { payload: { title: string; sp
 
 resolver.define('uploadAttachment', async ({ payload }: { payload: { pageId: string; filename: string; fileBase64: string; mimeType: string } }) => {
   return uploadAttachment(payload);
+});
+
+resolver.define('updatePageBody', async ({ payload }: { payload: { pageId: string; title: string; body: string } }) => {
+  return updatePageBody(payload);
 });
 
 resolver.define('getNotebooks', async () => {
