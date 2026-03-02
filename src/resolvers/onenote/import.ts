@@ -36,7 +36,11 @@ export async function importOneNotePage(payload: ImportOneNotePagePayload): Prom
     try {
       const conversion = convertOneNoteHtml(html);
       body = conversion.storageFormat || '<p></p>';
-    } catch {
+      // TODO(developer): Upload conversion.attachments to Confluence page
+      //   What: Use attachments API to upload extracted images
+      //   Prio: HIGH — images will be broken until this is implemented
+    } catch (convErr) {
+      console.warn('Converter failed, falling back to plain text:', convErr instanceof Error ? convErr.message : convErr);
       const text = htmlToText(html);
       body = textToStorageFormat(text);
     }

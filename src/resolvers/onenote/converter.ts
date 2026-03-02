@@ -43,7 +43,10 @@ function escapeXml(text: string): string {
 function parseStyle(style: string): Record<string, string> {
   const result: Record<string, string> = {};
   for (const part of style.split(';')) {
-    const [key, val] = part.split(':').map(s => s.trim().toLowerCase());
+    const idx = part.indexOf(':');
+    if (idx < 0) continue;
+    const key = part.slice(0, idx).trim().toLowerCase();
+    const val = part.slice(idx + 1).trim().toLowerCase();
     if (key && val) result[key] = val;
   }
   return result;
@@ -67,13 +70,20 @@ function fileExtension(contentType: string): string {
   return map[contentType] ?? 'png';
 }
 
+const MAX_HTML_SIZE = 10 * 1024 * 1024; // 10MB
+
 export function convertOneNoteHtml(html: string): ConversionResult {
   if (!html || !html.trim()) {
     return { storageFormat: '', attachments: [] };
   }
 
+  if (html.length > MAX_HTML_SIZE) {
+    throw new Error('OneNote HTML exceeds maximum size (10MB)');
+  }
+
   const attachments: AttachmentRef[] = [];
-  let output = '';
+  const parts: string[] = [];
+  const push = (s: string) => { parts.push(s); };
   let inBody = false;
   let hasBody = html.toLowerCase().includes('<body');
   let skipDepth = 0;
@@ -103,19 +113,19 @@ export function convertOneNoteHtml(html: string): ConversionResult {
           const idx = attachments.length;
           const filename = `image-${idx}.${fileExtension(dataUri.contentType)}`;
           attachments.push({ filename, data: dataUri.data, contentType: dataUri.contentType });
-          output += `<ac:image><ri:attachment ri:filename="${filename}" /></ac:image>`;
-        } else if (src.startsWith('http')) {
+          push(`<ac:image><ri:attachment ri:filename="${escapeXml(filename)}" /></ac:image>`);
+        } else if (src.startsWith('https://graph.microsoft.com/')) {
           const idx = attachments.length;
           const filename = `image-${idx}.png`;
           attachments.push({ filename, data: Buffer.alloc(0), contentType: 'image/png', remoteUrl: src });
-          output += `<ac:image><ri:attachment ri:filename="${filename}" /></ac:image>`;
+          push(`<ac:image><ri:attachment ri:filename="${escapeXml(filename)}" /></ac:image>`);
         }
         return;
       }
 
       // Handle br
       if (tag === 'br') {
-        output += '<br />';
+        push('<br />');
         return;
       }
 
@@ -123,17 +133,17 @@ export function convertOneNoteHtml(html: string): ConversionResult {
       if (tag === 'span') {
         const style = attribs.style ? parseStyle(attribs.style) : {};
         if (style['font-weight'] === 'bold' || style['font-weight'] === '700') {
-          output += '<strong>';
+          push('<strong>');
           tagStack.push('strong');
           return;
         }
         if (style['font-style'] === 'italic') {
-          output += '<em>';
+          push('<em>');
           tagStack.push('em');
           return;
         }
         if (style['text-decoration'] === 'underline') {
-          output += '<u>';
+          push('<u>');
           tagStack.push('u');
           return;
         }
@@ -162,14 +172,14 @@ export function convertOneNoteHtml(html: string): ConversionResult {
         }
       }
 
-      output += `<${mapped}${attrStr}>`;
+      push(`<${mapped}${attrStr}>`);
       tagStack.push(mapped);
     },
 
     ontext(text) {
       if (skipDepth > 0) return;
       if (hasBody && !inBody) return;
-      output += escapeXml(text);
+      push(escapeXml(text));
     },
 
     onclosetag(name) {
@@ -186,7 +196,7 @@ export function convertOneNoteHtml(html: string): ConversionResult {
 
       const mapped = tagStack.pop();
       if (mapped) {
-        output += `</${mapped}>`;
+        push(`</${mapped}>`);
       }
     },
   }, { decodeEntities: true });
@@ -194,5 +204,5 @@ export function convertOneNoteHtml(html: string): ConversionResult {
   parser.write(html);
   parser.end();
 
-  return { storageFormat: output.trim(), attachments };
+  return { storageFormat: parts.join('').trim(), attachments };
 }
