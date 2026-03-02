@@ -32,6 +32,8 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
   th: new Set(['colspan', 'rowspan']),
 };
 
+const SAFE_HREF_PATTERN = /^(https?:|mailto:|#)/i;
+
 function escapeXml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -166,9 +168,9 @@ export function convertOneNoteHtml(html: string): ConversionResult {
       let attrStr = '';
       if (allowedSet) {
         for (const [key, val] of Object.entries(attribs)) {
-          if (allowedSet.has(key)) {
-            attrStr += ` ${key}="${escapeXml(val)}"`;
-          }
+          if (!allowedSet.has(key)) continue;
+          if (key === 'href' && !SAFE_HREF_PATTERN.test(val)) continue;
+          attrStr += ` ${key}="${escapeXml(val)}"`;
         }
       }
 
