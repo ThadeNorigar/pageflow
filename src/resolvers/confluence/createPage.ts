@@ -34,7 +34,7 @@ export async function createPage(payload: CreatePagePayload): Promise<CreatePage
     body.parentId = payload.parentId;
   }
 
-  const response = await api.asApp().requestConfluence(route`/wiki/api/v2/pages`, {
+  const response = await api.asUser().requestConfluence(route`/wiki/api/v2/pages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
