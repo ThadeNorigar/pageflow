@@ -16,7 +16,8 @@
   ],
   "dependencies": {
     "@forge/api": "^4.1.0",
-    "@forge/resolver": "^1.7.0"
+    "@forge/resolver": "^1.7.0",
+    "htmlparser2": "^10.1.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

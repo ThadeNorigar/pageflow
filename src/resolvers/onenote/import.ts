@@ -1,6 +1,7 @@
 import { requestMicrosoftGraphText } from './auth';
 import { createPage } from '../confluence/createPage';
 import { htmlToText, textToStorageFormat } from './htmlToText';
+import { convertOneNoteHtml } from './converter';
 
 const ONENOTE_ID_PATTERN = /^[a-zA-Z0-9!-]+$/;
 
@@ -30,9 +31,15 @@ export async function importOneNotePage(payload: ImportOneNotePagePayload): Prom
     // 1. Fetch OneNote page HTML content
     const html = await requestMicrosoftGraphText(`/v1.0/me/onenote/pages/${pageId}/content`);
 
-    // 2. Convert HTML to plain text, then wrap in Storage Format
-    const text = htmlToText(html);
-    const body = textToStorageFormat(text);
+    // 2. Convert HTML to Confluence Storage Format (with fallback to plain text)
+    let body: string;
+    try {
+      const conversion = convertOneNoteHtml(html);
+      body = conversion.storageFormat || '<p></p>';
+    } catch {
+      const text = htmlToText(html);
+      body = textToStorageFormat(text);
+    }
 
     // 3. Create Confluence page with content
     const result = await createPage({ title, spaceId, parentId, body });
