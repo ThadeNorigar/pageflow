@@ -2,6 +2,7 @@ import Resolver from '@forge/resolver';
 import { getSpaces } from './confluence/spaces';
 import { getPages } from './confluence/pages';
 import { createPage } from './confluence/createPage';
+import { uploadAttachment } from './confluence/attachments';
 import { checkAuthStatus, requestAuth, requestMicrosoftGraph } from './onenote/auth';
 import { getNotebooks, getSections, getPages as getOneNotePages } from './onenote/notebooks';
 import { importOneNotePage } from './onenote/import';
@@ -33,8 +34,12 @@ resolver.define('getPages', async ({ payload }: { payload: { spaceKey: string; s
   return getPages(payload.spaceKey, payload.spaceId);
 });
 
-resolver.define('createPage', async ({ payload }: { payload: { title: string; spaceId: string; parentId: string | null } }) => {
+resolver.define('createPage', async ({ payload }: { payload: { title: string; spaceId: string; parentId: string | null; body?: string } }) => {
   return createPage(payload);
+});
+
+resolver.define('uploadAttachment', async ({ payload }: { payload: { pageId: string; filename: string; fileBase64: string; mimeType: string } }) => {
+  return uploadAttachment(payload);
 });
 
 resolver.define('getNotebooks', async () => {

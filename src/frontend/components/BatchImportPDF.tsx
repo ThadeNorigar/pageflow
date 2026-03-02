@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { invoke, requestConfluence } from '@forge/bridge';
+import { invoke } from '@forge/bridge';
 import { SpaceSelection } from '../types';
 import { C } from '../utils/colors';
 import { buildFolderTree, countFiles, totalSize, FolderNode } from '../utils/folderTree';
@@ -19,6 +19,22 @@ interface ImportResult {
 }
 
 const MAX_FILE_COUNT = 100;
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      resolve(dataUrl.split(',')[1]);
+    };
+    reader.onerror = () => reject(new Error('FileReader failed'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function viewFileMacro(filename: string): string {
+  return `<ac:structured-macro ac:name="view-file" ac:schema-version="1"><ac:parameter ac:name="name"><ri:attachment ri:filename="${filename}"/></ac:parameter></ac:structured-macro>`;
+}
 
 const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) => {
   const [phase, setPhase] = useState<Phase>('select');
@@ -113,27 +129,21 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
         try {
           setCurrentFile(file.name);
 
-          // Create page for PDF
           const title = titleFromFilename(file.name);
           const pageResult = await invoke<{ pageId: string }>('createPage', {
             title,
             spaceId,
             parentId: folderPageId,
+            body: viewFileMacro(file.name),
           });
 
-          // Upload PDF as attachment
-          const form = new FormData();
-          form.append('file', file, file.name);
-          const attachResponse = await requestConfluence(`/wiki/rest/api/content/${pageResult.pageId}/child/attachment`, {
-            method: 'POST',
-            body: form,
-            headers: { 'X-Atlassian-Token': 'nocheck' },
+          const fileBase64 = await fileToBase64(file);
+          await invoke('uploadAttachment', {
+            pageId: pageResult.pageId,
+            filename: file.name,
+            fileBase64,
+            mimeType: file.type || 'application/pdf',
           });
-
-          if (!attachResponse.ok) {
-            const errText = await attachResponse.text();
-            throw new Error(`Attachment: ${attachResponse.status} ${errText}`);
-          }
 
           importResults.push({ name: file.name, status: 'done' });
         } catch (err) {
