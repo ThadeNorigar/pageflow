@@ -127,6 +127,60 @@ describe('convertOneNoteHtml', () => {
     expect(result.storageFormat).toBe('<p>Line1<br />Line2</p>');
   });
 
+  it('throws error for HTML exceeding 10MB', () => {
+    const largeHtml = 'x'.repeat(10 * 1024 * 1024 + 1);
+    expect(() => convertOneNoteHtml(largeHtml)).toThrow('OneNote HTML exceeds maximum size (10MB)');
+  });
+
+  it('filters javascript: href from links', () => {
+    const html = '<a href="javascript:alert(1)">XSS</a>';
+    const result = convertOneNoteHtml(html);
+    expect(result.storageFormat).toBe('<a>XSS</a>');
+    expect(result.storageFormat).not.toContain('javascript:');
+  });
+
+  it('maps font-weight:700 style to <strong>', () => {
+    const html = '<span style="font-weight:700">bold</span>';
+    const result = convertOneNoteHtml(html);
+    expect(result.storageFormat).toBe('<strong>bold</strong>');
+  });
+
+  it('maps text-decoration:underline style to <u>', () => {
+    const html = '<span style="text-decoration:underline">underlined</span>';
+    const result = convertOneNoteHtml(html);
+    expect(result.storageFormat).toBe('<u>underlined</u>');
+  });
+
+  it('skips nested elements inside head/script/style', () => {
+    const html = '<html><head><script><div>hidden</div></script></head><body><p>visible</p></body></html>';
+    const result = convertOneNoteHtml(html);
+    expect(result.storageFormat).toBe('<p>visible</p>');
+    expect(result.storageFormat).not.toContain('hidden');
+  });
+
+  it('handles HTML fragment without body tag (hasBody=false)', () => {
+    const html = '<p>Fragment</p><ul><li>Item</li></ul>';
+    const result = convertOneNoteHtml(html);
+    expect(result.storageFormat).toBe('<p>Fragment</p><ul><li>Item</li></ul>');
+  });
+
+  it('handles multiple images (data-URI + remote mixed)', () => {
+    const html = `
+      <img src="data:image/jpeg;base64,AAAA" />
+      <img src="https://graph.microsoft.com/v1.0/me/onenote/resources/456/$value" />
+      <img src="data:image/gif;base64,BBBB" />
+    `;
+    const result = convertOneNoteHtml(html);
+    expect(result.attachments).toHaveLength(3);
+    expect(result.attachments[0].filename).toBe('image-0.jpg');
+    expect(result.attachments[0].contentType).toBe('image/jpeg');
+    expect(result.attachments[1].filename).toBe('image-1.png');
+    expect(result.attachments[1].remoteUrl).toContain('graph.microsoft.com');
+    expect(result.attachments[2].filename).toBe('image-2.gif');
+    expect(result.attachments[2].contentType).toBe('image/gif');
+    expect((result.storageFormat.match(/<ac:image>/g) || []).length).toBe(3);
+  });
+
   it('handles mixed OneNote HTML with multiple elements', () => {
     const html = `
       <html>

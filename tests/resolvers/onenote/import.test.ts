@@ -8,11 +8,17 @@ jest.mock('../../../src/resolvers/confluence/createPage', () => ({
   createPage: jest.fn(),
 }));
 
+jest.mock('../../../src/resolvers/onenote/converter', () => ({
+  convertOneNoteHtml: jest.fn(),
+}));
+
 import { requestMicrosoftGraphText } from '../../../src/resolvers/onenote/auth';
 import { createPage } from '../../../src/resolvers/confluence/createPage';
+import { convertOneNoteHtml } from '../../../src/resolvers/onenote/converter';
 
 const mockGraphText = requestMicrosoftGraphText as jest.MockedFunction<typeof requestMicrosoftGraphText>;
 const mockCreatePage = createPage as jest.MockedFunction<typeof createPage>;
+const mockConvert = convertOneNoteHtml as jest.MockedFunction<typeof convertOneNoteHtml>;
 
 const validPayload = {
   pageId: 'abc123',
@@ -25,6 +31,8 @@ describe('importOneNotePage', () => {
   beforeEach(() => {
     mockGraphText.mockReset();
     mockCreatePage.mockReset();
+    mockConvert.mockReset();
+    mockConvert.mockImplementation(jest.requireActual('../../../src/resolvers/onenote/converter').convertOneNoteHtml);
   });
 
   it('happy path: fetches HTML, converts, creates page', async () => {
@@ -111,6 +119,19 @@ describe('importOneNotePage', () => {
 
     expect(mockCreatePage).toHaveBeenCalledWith(
       expect.objectContaining({ parentId: 'parent-99' })
+    );
+  });
+
+  it('falls back to plain text when converter throws', async () => {
+    mockGraphText.mockResolvedValue('<html><body><p>Some content</p></body></html>');
+    mockConvert.mockImplementation(() => { throw new Error('parse error'); });
+    mockCreatePage.mockResolvedValue({ pageId: 'conf-789', title: 'My OneNote Page' });
+
+    const result = await importOneNotePage(validPayload);
+
+    expect(result.status).toBe('success');
+    expect(mockCreatePage).toHaveBeenCalledWith(
+      expect.objectContaining({ body: expect.stringContaining('Some content') })
     );
   });
 });
