@@ -24,6 +24,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
   const [phase, setPhase] = useState<Phase>('select');
   const [tree, setTree] = useState<FolderNode | null>(null);
   const [includeSubfolders, setIncludeSubfolders] = useState(true);
+  const [excludedFiles, setExcludedFiles] = useState<Set<string>>(new Set());
   const [currentFile, setCurrentFile] = useState('');
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [results, setResults] = useState<ImportResult[]>([]);
@@ -35,11 +36,22 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
     const built = buildFolderTree(Array.from(e.target.files));
     if (!built) return;
     setTree(built);
+    setExcludedFiles(new Set());
     setPhase('preview');
   }, []);
 
-  const fileCount = tree ? countFiles(tree, includeSubfolders) : 0;
+  const allFileCount = tree ? countFiles(tree, includeSubfolders) : 0;
+  const selectedFileCount = allFileCount - excludedFiles.size;
   const fileSizeMB = tree ? (totalSize(tree, includeSubfolders) / 1024 / 1024).toFixed(1) : '0';
+
+  const toggleFile = useCallback((fileKey: string) => {
+    setExcludedFiles(prev => {
+      const next = new Set(prev);
+      if (next.has(fileKey)) next.delete(fileKey);
+      else next.add(fileKey);
+      return next;
+    });
+  }, []);
 
   const reset = useCallback(() => {
     setPhase('select');
@@ -60,8 +72,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
     cancelRef.current = false;
     setPhase('importing');
     const importResults: ImportResult[] = [];
-    const total = countFiles(tree, includeSubfolders);
-    setProgress({ current: 0, total });
+    setProgress({ current: 0, total: selectedFileCount });
 
     async function importFolder(node: FolderNode, parentId: string | null): Promise<void> {
       if (cancelRef.current) return;
@@ -88,6 +99,9 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
       // Import PDFs in this folder
       for (const file of node.files) {
         if (cancelRef.current) return;
+
+        const fileKey = `${node.path}/${file.name}`;
+        if (excludedFiles.has(fileKey)) continue;
 
         const validationErr = validateFile(file);
         if (validationErr) {
@@ -144,7 +158,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
     await importFolder(tree, selection.pageId);
     setResults(importResults);
     setPhase('done');
-  }, [tree, selection, spaceId, includeSubfolders]);
+  }, [tree, selection, spaceId, includeSubfolders, excludedFiles, selectedFileCount]);
 
   // SELECT phase
   if (phase === 'select') {
@@ -203,7 +217,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
                 {tree.name}
               </span>
               <span style={{ fontSize: 13, color: C.N200, marginLeft: 8 }}>
-                {fileCount} PDF{fileCount !== 1 ? 's' : ''} &middot; {fileSizeMB} MB
+                {selectedFileCount}/{allFileCount} PDF{allFileCount !== 1 ? 's' : ''} &middot; {fileSizeMB} MB
               </span>
             </div>
             <button
@@ -236,17 +250,17 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
             </label>
           </div>
 
-          {fileCount > MAX_FILE_COUNT && (
+          {selectedFileCount > MAX_FILE_COUNT && (
             <div style={{ padding: '8px 16px', backgroundColor: C.R75, fontSize: 13, color: C.R400 }}>
               Max. {MAX_FILE_COUNT} PDFs pro Batch. Bitte Unterordner deaktivieren oder Ordner aufteilen.
             </div>
           )}
 
-          <PreviewTree node={tree} depth={0} includeSubfolders={includeSubfolders} />
+          <PreviewTree node={tree} depth={0} includeSubfolders={includeSubfolders} excludedFiles={excludedFiles} onToggleFile={toggleFile} />
         </div>
 
         {(() => {
-          const canImport = !!selection && !!spaceId && fileCount > 0 && fileCount <= MAX_FILE_COUNT;
+          const canImport = !!selection && !!spaceId && selectedFileCount > 0 && selectedFileCount <= MAX_FILE_COUNT;
           const reason = !spaceId ? 'Bitte zuerst einen Space auswählen'
             : !selection?.pageId ? 'Bitte eine Ziel-Seite im Seitenbaum auswählen'
             : null;
@@ -266,7 +280,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
                   cursor: canImport ? 'pointer' : 'default',
                 }}
               >
-                {fileCount} PDF{fileCount !== 1 ? 's' : ''} importieren
+                {selectedFileCount} PDF{selectedFileCount !== 1 ? 's' : ''} importieren
               </button>
               {!canImport && reason && (
                 <div style={{ marginTop: 6, fontSize: 12, color: C.N200 }}>
@@ -371,25 +385,39 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
 };
 
 // Preview sub-component
-const PreviewTree: React.FC<{ node: FolderNode; depth: number; includeSubfolders: boolean }> = ({ node, depth, includeSubfolders }) => (
+const PreviewTree: React.FC<{
+  node: FolderNode; depth: number; includeSubfolders: boolean;
+  excludedFiles: Set<string>; onToggleFile: (key: string) => void;
+}> = ({ node, depth, includeSubfolders, excludedFiles, onToggleFile }) => (
   <div style={{ padding: depth === 0 ? '4px 0' : 0 }}>
-    {node.files.map((f, i) => (
-      <div key={i} style={{
-        padding: '4px 16px',
-        paddingLeft: (depth + 1) * 16,
-        fontSize: 13,
-        color: C.N800,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-      }}>
-        <span style={{ color: C.R400, fontSize: 12 }}>PDF</span>
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
-        <span style={{ color: C.N200, fontSize: 12, flexShrink: 0 }}>
-          {(f.size / 1024 / 1024).toFixed(1)} MB
-        </span>
-      </div>
-    ))}
+    {node.files.map((f, i) => {
+      const fileKey = `${node.path}/${f.name}`;
+      const isExcluded = excludedFiles.has(fileKey);
+      return (
+        <div key={i} style={{
+          padding: '4px 16px',
+          paddingLeft: (depth + 1) * 16,
+          fontSize: 13,
+          color: isExcluded ? C.N200 : C.N800,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          opacity: isExcluded ? 0.6 : 1,
+        }}>
+          <input
+            type="checkbox"
+            checked={!isExcluded}
+            onChange={() => onToggleFile(fileKey)}
+            style={{ cursor: 'pointer', flexShrink: 0 }}
+          />
+          <span style={{ color: C.R400, fontSize: 12 }}>PDF</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+          <span style={{ color: C.N200, fontSize: 12, flexShrink: 0 }}>
+            {(f.size / 1024 / 1024).toFixed(1)} MB
+          </span>
+        </div>
+      );
+    })}
     {includeSubfolders && node.children.map((child, i) => (
       <div key={i}>
         <div style={{
@@ -401,7 +429,7 @@ const PreviewTree: React.FC<{ node: FolderNode; depth: number; includeSubfolders
         }}>
           &#128193; {child.name}
         </div>
-        <PreviewTree node={child} depth={depth + 1} includeSubfolders={includeSubfolders} />
+        <PreviewTree node={child} depth={depth + 1} includeSubfolders={includeSubfolders} excludedFiles={excludedFiles} onToggleFile={onToggleFile} />
       </div>
     ))}
   </div>
