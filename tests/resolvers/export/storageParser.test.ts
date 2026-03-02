@@ -150,4 +150,49 @@ describe('parseStorageFormat', () => {
       { type: 'paragraph', text: 'Second paragraph' },
     ]);
   });
+
+  it('should decode HTML entities in paragraph text', () => {
+    const xhtml = '<p>&bdquo;Gr&uuml;&szlig;e&ldquo; &ndash; ein &Uuml;berblick</p>';
+    const blocks = parseStorageFormat(xhtml);
+
+    expect(blocks).toEqual([
+      { type: 'paragraph', text: '\u201EGrüße\u201C \u2013 ein Überblick' },
+    ]);
+  });
+
+  it('should decode numeric and hex entities', () => {
+    const xhtml = '<p>&#169; 2026 &#x2014; PageFlow</p>';
+    const blocks = parseStorageFormat(xhtml);
+
+    expect(blocks).toEqual([
+      { type: 'paragraph', text: '© 2026 \u2014 PageFlow' },
+    ]);
+  });
+
+  it('should decode entities in list items', () => {
+    const xhtml = '<ul><li>F&uuml;r &amp; Wider</li><li>&bdquo;Zitat&ldquo;</li></ul>';
+    const blocks = parseStorageFormat(xhtml);
+
+    expect(blocks).toEqual([
+      { type: 'list', items: ['Für & Wider', '\u201EZitat\u201C'] },
+    ]);
+  });
+
+  it('should decode entities in table cells', () => {
+    const xhtml = '<table><tr><td>Stra&szlig;e</td><td>Gr&ouml;&szlig;e</td></tr></table>';
+    const blocks = parseStorageFormat(xhtml);
+
+    expect(blocks).toEqual([
+      { type: 'table', rows: [['Straße', 'Größe']] },
+    ]);
+  });
+
+  it('should decode entities in headings', () => {
+    const xhtml = '<h1>&Uuml;bersicht &amp; Zusammenfassung</h1>';
+    const blocks = parseStorageFormat(xhtml);
+
+    expect(blocks).toEqual([
+      { type: 'heading', text: 'Übersicht & Zusammenfassung', level: 1 },
+    ]);
+  });
 });

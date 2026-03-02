@@ -93,8 +93,8 @@ const App: React.FC = () => {
         )}
       </div>
 
-      {/* Shared Page Tree (target selection) */}
-      {selectedSpace && (
+      {/* Shared Page Tree (target selection) — only for import tabs */}
+      {selectedSpace && activeTab !== 'pdf-export' && (
         <PageTree
           spaceKey={selectedSpace.key}
           spaceId={selectedSpace.id}
@@ -103,8 +103,8 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Selection Summary */}
-      {selection && (
+      {/* Selection Summary — only for import tabs */}
+      {selection && activeTab !== 'pdf-export' && (
         <div style={{
           marginTop: 12,
           padding: '10px 14px',

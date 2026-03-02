@@ -6,8 +6,23 @@ export interface ContentBlock {
   rows?: string[][];
 }
 
+function decodeEntities(text: string): string {
+  const entities: Record<string, string> = {
+    '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&apos;': "'",
+    '&nbsp;': ' ', '&ndash;': '\u2013', '&mdash;': '\u2014',
+    '&lsquo;': '\u2018', '&rsquo;': '\u2019', '&ldquo;': '\u201C', '&rdquo;': '\u201D',
+    '&bdquo;': '\u201E', '&bull;': '\u2022', '&hellip;': '\u2026',
+    '&auml;': 'ä', '&ouml;': 'ö', '&uuml;': 'ü', '&Auml;': 'Ä', '&Ouml;': 'Ö', '&Uuml;': 'Ü',
+    '&szlig;': 'ß', '&euro;': '€', '&copy;': '©', '&reg;': '®', '&trade;': '™',
+  };
+  let result = text.replace(/&[a-zA-Z]+;/g, (match) => entities[match] ?? match);
+  result = result.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)));
+  result = result.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
+  return result;
+}
+
 function stripTags(html: string): string {
-  return html.replace(/<[^>]+>/g, '').trim();
+  return decodeEntities(html.replace(/<[^>]+>/g, '')).trim();
 }
 
 function extractListItems(html: string): string[] {
