@@ -15,7 +15,6 @@ interface ExportPageTreeProps {
   spaceId: string;
   selectedIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
-  includeChildren: boolean;
 }
 
 const Spinner: React.FC = () => (
@@ -107,7 +106,7 @@ const PageNode: React.FC<PageNodeProps> = ({ page, depth, selectedIds, onToggle,
   );
 };
 
-const ExportPageTree: React.FC<ExportPageTreeProps> = ({ spaceKey, spaceId, selectedIds, onSelectionChange, includeChildren }) => {
+const ExportPageTree: React.FC<ExportPageTreeProps> = ({ spaceKey, spaceId, selectedIds, onSelectionChange }) => {
   const [pages, setPages] = useState<ConfluencePage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -151,17 +150,13 @@ const ExportPageTree: React.FC<ExportPageTreeProps> = ({ spaceKey, spaceId, sele
     const next = new Set(selectedIds);
     if (next.has(pageId)) {
       next.delete(pageId);
-      if (includeChildren) {
-        for (const id of getDescendantIds(pageId)) next.delete(id);
-      }
+      for (const id of getDescendantIds(pageId)) next.delete(id);
     } else {
       next.add(pageId);
-      if (includeChildren) {
-        for (const id of getDescendantIds(pageId)) next.add(id);
-      }
+      for (const id of getDescendantIds(pageId)) next.add(id);
     }
     onSelectionChange(next);
-  }, [selectedIds, onSelectionChange, includeChildren, getDescendantIds]);
+  }, [selectedIds, onSelectionChange, getDescendantIds]);
 
   const selectAll = useCallback(() => {
     const allIds = new Set(pages.filter(p => !p.isFolder).map(p => p.id));

@@ -245,32 +245,35 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
           <PreviewTree node={tree} depth={0} includeSubfolders={includeSubfolders} />
         </div>
 
-        {!selection && (
-          <div style={{ marginTop: 8, fontSize: 12, color: C.N200 }}>
-            Bitte zuerst eine Ziel-Seite auswählen
-          </div>
-        )}
-
         {(() => {
           const canImport = !!selection && !!spaceId && fileCount > 0 && fileCount <= MAX_FILE_COUNT;
+          const reason = !spaceId ? 'Bitte zuerst einen Space auswählen'
+            : !selection?.pageId ? 'Bitte eine Ziel-Seite im Seitenbaum auswählen'
+            : null;
           return (
-            <button
-              onClick={startImport}
-              disabled={!canImport}
-              style={{
-                marginTop: 12,
-                padding: '8px 20px',
-                fontSize: 14,
-                fontWeight: 500,
-                color: canImport ? '#fff' : C.N200,
-                backgroundColor: canImport ? C.B400 : C.N20,
-                border: 'none',
-                borderRadius: 4,
-                cursor: canImport ? 'pointer' : 'default',
-              }}
-            >
-              {fileCount} PDF{fileCount !== 1 ? 's' : ''} importieren
-            </button>
+            <div style={{ marginTop: 12 }}>
+              <button
+                onClick={startImport}
+                disabled={!canImport}
+                style={{
+                  padding: '8px 20px',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: canImport ? '#fff' : C.N200,
+                  backgroundColor: canImport ? C.B400 : C.N20,
+                  border: canImport ? 'none' : `1px solid ${C.N40}`,
+                  borderRadius: 4,
+                  cursor: canImport ? 'pointer' : 'default',
+                }}
+              >
+                {fileCount} PDF{fileCount !== 1 ? 's' : ''} importieren
+              </button>
+              {!canImport && reason && (
+                <div style={{ marginTop: 6, fontSize: 12, color: C.N200 }}>
+                  {reason}
+                </div>
+              )}
+            </div>
           );
         })()}
       </div>

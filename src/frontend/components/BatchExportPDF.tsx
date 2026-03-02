@@ -16,7 +16,6 @@ const MAX_PAGES = 50;
 const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) => {
   const [phase, setPhase] = useState<Phase>('select');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [includeChildren, setIncludeChildren] = useState(false);
   const [stationeryFile, setStationeryFile] = useState<File | null>(null);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [currentTitle, setCurrentTitle] = useState('');
@@ -140,19 +139,9 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
           spaceId={spaceId}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
-          includeChildren={includeChildren}
         />
 
         <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: C.N800, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={includeChildren}
-              onChange={e => setIncludeChildren(e.target.checked)}
-            />
-            Unterseiten einbeziehen
-          </label>
-
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.N200, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Briefpapier (optional)
