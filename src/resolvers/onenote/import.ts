@@ -40,7 +40,6 @@ export async function importOneNotePage(payload: ImportOneNotePagePayload): Prom
       //   What: Use attachments API to upload extracted images
       //   Prio: HIGH — images will be broken until this is implemented
     } catch (convErr) {
-      console.warn('Converter failed, falling back to plain text:', convErr instanceof Error ? convErr.message : convErr);
       const text = htmlToText(html);
       body = textToStorageFormat(text);
     }

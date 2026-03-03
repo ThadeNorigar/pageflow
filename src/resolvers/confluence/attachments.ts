@@ -27,7 +27,9 @@ export async function uploadAttachment(payload: UploadAttachmentPayload): Promis
   const boundary = `----ForgeAttachment${Date.now()}`;
   const crlf = '\r\n';
 
-  const header = `--${boundary}${crlf}Content-Disposition: form-data; name="file"; filename="${payload.filename}"${crlf}Content-Type: ${payload.mimeType || 'application/octet-stream'}${crlf}${crlf}`;
+  const safeFilename = payload.filename.replace(/[\r\n"]/g, '');
+  const safeMimeType = (payload.mimeType || 'application/octet-stream').replace(/[\r\n]/g, '');
+  const header = `--${boundary}${crlf}Content-Disposition: form-data; name="file"; filename="${safeFilename}"${crlf}Content-Type: ${safeMimeType}${crlf}${crlf}`;
   const footer = `${crlf}--${boundary}--${crlf}`;
 
   const headerBuf = Buffer.from(header, 'utf-8');
