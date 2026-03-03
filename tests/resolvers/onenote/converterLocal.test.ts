@@ -71,4 +71,34 @@ describe('convertOneNoteHtml — local file references', () => {
     expect(result.attachments[0].filename).toBe('Bild mit Leerzeichen.png');
     expect(result.attachments[0].localPath).toBe('Page_files/Bild%20mit%20Leerzeichen.png');
   });
+
+  it('handles local image with unknown extension', () => {
+    const html = '<img src="files/diagram.tiff" />';
+    const result = convertOneNoteHtml(html);
+    expect(result.attachments).toHaveLength(1);
+    expect(result.attachments[0].contentType).toBe('image/png');
+    expect(result.attachments[0].filename).toBe('diagram.tiff');
+  });
+
+  it('handles local image with no extension', () => {
+    const html = '<img src="files/noext" />';
+    const result = convertOneNoteHtml(html);
+    expect(result.attachments).toHaveLength(1);
+    expect(result.attachments[0].filename).toBe('noext');
+  });
+
+  it('handles bare filename without directory', () => {
+    const html = '<img src="image.jpg" />';
+    const result = convertOneNoteHtml(html);
+    expect(result.attachments).toHaveLength(1);
+    expect(result.attachments[0].filename).toBe('image.jpg');
+    expect(result.attachments[0].contentType).toBe('image/jpeg');
+    expect(result.attachments[0].localPath).toBe('image.jpg');
+  });
+
+  it('skips img with empty src', () => {
+    const html = '<img src="" />';
+    const result = convertOneNoteHtml(html);
+    expect(result.attachments).toHaveLength(0);
+  });
 });
