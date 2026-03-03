@@ -55,11 +55,12 @@ PageFlow ist eine **Atlassian Forge App** für den Confluence Marketplace, die C
 
 ### Kernfunktionen
 1. OneNote Notebooks/Sections/Pages lesen (MS Graph API + OAuth2)
-2. Inhalte konvertieren (OneNote HTML → Confluence Storage Format)
-3. Confluence-Seiten erstellen mit korrekter Hierarchie
-4. Attachments hochladen und verlinken
-5. Batch-Migration mit Fortschrittsanzeige
-6. PDF-Import mit optionaler Textextraktion
+2. Lokaler OneNote-Import (HTML-Export aus OneNote Desktop)
+3. Inhalte konvertieren (OneNote HTML → Confluence Storage Format)
+4. Confluence-Seiten erstellen mit korrekter Hierarchie
+5. Attachments hochladen und verlinken
+6. Batch-Migration mit Fortschrittsanzeige
+7. PDF-Import mit optionaler Textextraktion
 
 ---
 
@@ -101,8 +102,9 @@ PageFlow/
 │   │   │   ├── auth.ts          # OAuth2 token management
 │   │   │   ├── notebooks.ts     # Notebook/Section/Page browsing
 │   │   │   ├── import.ts        # OneNote page import (Graph → Confluence)
+│   │   │   ├── localImport.ts   # Local OneNote HTML import (Desktop export)
 │   │   │   ├── htmlToText.ts    # HTML→text + Storage Format conversion
-│   │   │   └── converter.ts     # OneNote HTML → Storage Format
+│   │   │   └── converter.ts     # OneNote HTML → Storage Format (+ local img paths)
 │   │   ├── migration/           # Migration engine
 │   │   │   ├── engine.ts        # Batch processing + progress
 │   │   │   ├── queue.ts         # Job queue management
@@ -121,8 +123,9 @@ PageFlow/
 │       ├── components/          # Reusable UI components
 │       │   ├── SpaceDropdown.tsx # Filterable space dropdown
 │       │   ├── PageTree.tsx     # Page tree with lazy-loading (target selection)
-│       │   ├── Tabs.tsx         # Tab navigation (PDF Import, OneNote, PDF Export)
+│       │   ├── Tabs.tsx         # Tab navigation (PDF Import, OneNote, Local OneNote, PDF Export)
 │       │   ├── BatchImportPDF.tsx # Folder-based batch PDF import
+│       │   ├── LocalOneNoteImport.tsx # Local OneNote HTML export import
 │       │   ├── ImportButton.tsx # OneNote import trigger with progress
 │       │   ├── BatchExportPDF.tsx # Batch PDF export with stationery
 │       │   ├── ExportPageTree.tsx # Checkbox-based page selection tree
@@ -135,7 +138,7 @@ PageFlow/
 │       │   ├── useForge.ts      # @forge/bridge wrapper
 │       │   └── useMigration.ts  # Migration state management
 │       └── utils/               # Frontend utilities
-│           ├── folderTree.ts    # Folder tree building from webkitdirectory
+│           ├── folderTree.ts    # Folder tree building from webkitdirectory (.pdf/.htm)
 │           ├── colors.ts        # Centralized ADS color constants
 │           ├── tabs.ts          # Tab definitions and validation
 │           ├── pdfExport.ts     # pdf-lib PDF generation + stationery overlay
