@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { invoke } from '@forge/bridge';
 import { SpaceSelection } from '../types';
 import { C } from '../utils/colors';
-import { buildFolderTree, flattenTree, countFiles, totalSize, FolderNode } from '../utils/folderTree';
+import { buildFolderTree, countFiles, totalSize, FolderNode } from '../utils/folderTree';
 
 interface LocalOneNoteImportProps {
   selection: SpaceSelection | null;
@@ -159,6 +159,9 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
           setCurrentFile(file.name);
           const title = titleFromFilename(file.name);
           const html = await fileToText(file);
+          if (html.length > 5 * 1024 * 1024) {
+            throw new Error(`HTML-Datei zu groß (${(html.length / 1024 / 1024).toFixed(1)} MB, max 5 MB)`);
+          }
 
           const conversion = await invoke<ConversionResult>('convertLocalOneNote', { html });
 

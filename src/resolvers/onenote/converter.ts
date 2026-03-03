@@ -36,6 +36,11 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
 const SAFE_HREF_PATTERN = /^(https?:|mailto:|#)/i;
 const ABSOLUTE_URL_PATTERN = /^(https?:|data:)/i;
 
+const LOCAL_CONTENT_TYPE_MAP: Record<string, string> = {
+  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+  gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp', svg: 'image/svg+xml',
+};
+
 function escapeXml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -127,8 +132,7 @@ export function convertOneNoteHtml(html: string): ConversionResult {
           const decodedSrc = decodeURIComponent(src);
           const filename = decodedSrc.split('/').pop() || `image-${attachments.length}.png`;
           const ext = filename.split('.').pop()?.toLowerCase() || 'png';
-          const contentTypeMap: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp', svg: 'image/svg+xml' };
-          attachments.push({ filename, data: Buffer.alloc(0), contentType: contentTypeMap[ext] || 'image/png', localPath: src });
+          attachments.push({ filename, data: Buffer.alloc(0), contentType: LOCAL_CONTENT_TYPE_MAP[ext] || 'image/png', localPath: src });
           push(`<ac:image><ri:attachment ri:filename="${escapeXml(filename)}" /></ac:image>`);
         }
         return;
