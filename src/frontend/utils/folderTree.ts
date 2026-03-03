@@ -12,19 +12,35 @@ export interface FlatImportItem {
   file?: File;
 }
 
-export function buildFolderTree(files: File[]): FolderNode | null {
-  const pdfFiles = Array.from(files).filter(f =>
-    f.name.toLowerCase().endsWith('.pdf') && f.size > 0
-  );
+function matchesExtension(name: string, ext: string): boolean {
+  const lower = name.toLowerCase();
+  if (ext === '.htm') {
+    return lower.endsWith('.htm') || lower.endsWith('.html');
+  }
+  return lower.endsWith(ext);
+}
 
-  if (pdfFiles.length === 0) return null;
+function isResourcePath(relativePath: string): boolean {
+  const parts = relativePath.split('/');
+  return parts.some(p => p.endsWith('_files'));
+}
 
-  const firstPath = (pdfFiles[0] as { webkitRelativePath?: string }).webkitRelativePath || pdfFiles[0].name;
+export function buildFolderTree(files: File[], extension = '.pdf'): FolderNode | null {
+  const filtered = Array.from(files).filter(f => {
+    if (!matchesExtension(f.name, extension) || f.size === 0) return false;
+    const relPath = (f as { webkitRelativePath?: string }).webkitRelativePath || f.name;
+    if (extension === '.htm' && isResourcePath(relPath)) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) return null;
+
+  const firstPath = (filtered[0] as { webkitRelativePath?: string }).webkitRelativePath || filtered[0].name;
   const rootName = firstPath.split('/')[0] || 'Import';
 
   const root: FolderNode = { name: rootName, path: '', files: [], children: [] };
 
-  for (const file of pdfFiles) {
+  for (const file of filtered) {
     const relPath = (file as { webkitRelativePath?: string }).webkitRelativePath || file.name;
     const parts = relPath.split('/');
     // parts[0] = root folder name, skip it

@@ -1,4 +1,4 @@
-export type TabId = 'pdf-import' | 'onenote-import' | 'pdf-export';
+export type TabId = 'pdf-import' | 'onenote-import' | 'local-onenote' | 'pdf-export';
 
 export interface TabDefinition {
   id: TabId;
@@ -6,9 +6,10 @@ export interface TabDefinition {
 }
 
 export const TABS: TabDefinition[] = [
-  { id: 'pdf-import', label: 'Batch Import PDF' },
+  { id: 'pdf-import', label: 'PDF Import' },
   { id: 'onenote-import', label: 'OneNote Import' },
-  { id: 'pdf-export', label: 'Batch Export PDF' },
+  { id: 'local-onenote', label: 'Local OneNote' },
+  { id: 'pdf-export', label: 'PDF Export' },
 ];
 
 export const DEFAULT_TAB: TabId = 'pdf-import';

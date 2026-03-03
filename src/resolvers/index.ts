@@ -6,6 +6,7 @@ import { uploadAttachment } from './confluence/attachments';
 import { checkAuthStatus, requestAuth, requestMicrosoftGraph } from './onenote/auth';
 import { getNotebooks, getSections, getPages as getOneNotePages } from './onenote/notebooks';
 import { importOneNotePage } from './onenote/import';
+import { processLocalOneNoteHtml } from './onenote/localImport';
 import { getPageBody } from './export/pageContent';
 
 const resolver = new Resolver();
@@ -64,6 +65,10 @@ resolver.define('importOneNotePage', async ({ payload }: { payload: { pageId: st
 
 resolver.define('getPageBody', async ({ payload }: { payload: { pageId: string } }) => {
   return getPageBody(payload.pageId);
+});
+
+resolver.define('convertLocalOneNote', async ({ payload }: { payload: { html: string } }) => {
+  return processLocalOneNoteHtml(payload.html);
 });
 
 export const handler = resolver.getDefinitions();

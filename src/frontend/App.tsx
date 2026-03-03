@@ -6,10 +6,22 @@ import BatchImportPDF from './components/BatchImportPDF';
 import BatchExportPDF from './components/BatchExportPDF';
 import NotebookBrowser, { OneNoteSelection } from './components/NotebookBrowser';
 import ImportButton from './components/ImportButton';
+import LocalOneNoteImport from './components/LocalOneNoteImport';
 import { TabId, DEFAULT_TAB } from './utils/tabs';
 import { SpaceSelection } from './types';
+import { C } from './utils/colors';
 
 const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif";
+
+const SECTION_LABEL: React.CSSProperties = {
+  display: 'block',
+  fontSize: 11,
+  fontWeight: 700,
+  color: C.N200,
+  marginBottom: 8,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+};
 
 const App: React.FC = () => {
   const [selectedSpace, setSelectedSpace] = useState<ConfluenceSpace | null>(null);
@@ -34,93 +46,108 @@ const App: React.FC = () => {
     ? { spaceKey: selectedSpace.key, spaceId: selectedSpace.id, pageId: selectedPageId }
     : null;
 
+  const isImportTab = activeTab === 'pdf-import' || activeTab === 'onenote-import' || activeTab === 'local-onenote';
+
+  const renderSourceContent = () => {
+    if (activeTab === 'pdf-import') {
+      return <BatchImportPDF selection={selection} spaceId={selectedSpace?.id ?? null} />;
+    }
+    if (activeTab === 'onenote-import') {
+      return (
+        <>
+          <NotebookBrowser onSelectionChange={handleOneNoteChange} />
+          {oneNoteSelection.pages.length > 0 && (
+            <div style={{
+              marginTop: 12,
+              padding: '10px 14px',
+              backgroundColor: C.B75,
+              borderRadius: 6,
+              fontSize: 14,
+              color: C.N800,
+              border: '1px solid #B3D4FF',
+            }}>
+              <strong>{oneNoteSelection.pages.length}</strong> OneNote-Seite{oneNoteSelection.pages.length !== 1 ? 'n' : ''} ausgewählt
+            </div>
+          )}
+          <div style={{ marginTop: 12 }}>
+            <ImportButton
+              pages={oneNoteSelection.pages}
+              spaceId={selectedSpace?.id ?? ''}
+              parentId={selectedPageId}
+              disabled={!selectedSpace}
+            />
+          </div>
+        </>
+      );
+    }
+    if (activeTab === 'local-onenote') {
+      return <LocalOneNoteImport selection={selection} spaceId={selectedSpace?.id ?? null} />;
+    }
+    return null;
+  };
+
+  const renderTargetPanel = () => (
+    <div style={{ width: 380, flexShrink: 0 }}>
+      <span style={SECTION_LABEL}>Ziel</span>
+      <div style={{
+        border: `1px solid ${C.N40}`,
+        borderRadius: 8,
+        boxShadow: '0 1px 3px rgba(9, 30, 66, 0.08)',
+      }}>
+        <div style={{ padding: 12, borderBottom: `1px solid ${C.N40}`, backgroundColor: C.N10, borderRadius: '8px 8px 0 0' }}>
+          <SpaceDropdown selectedSpace={selectedSpace} onSelectSpace={handleSpaceChange} />
+        </div>
+        {selectedSpace && (
+          <PageTree
+            spaceKey={selectedSpace.key}
+            spaceId={selectedSpace.id}
+            selectedPageId={selectedPageId}
+            onSelectPage={handlePageChange}
+            compact
+          />
+        )}
+        {!selectedSpace && (
+          <div style={{ padding: '24px 16px', textAlign: 'center', color: C.N200, fontSize: 13 }}>
+            Space auswählen um Ziel-Seite zu sehen
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
-    <div style={{ padding: '24px 32px', maxWidth: 960, fontFamily: FONT }}>
-      <h1 style={{ fontSize: 24, fontWeight: 600, color: '#172B4D', margin: '0 0 4px' }}>
+    <div style={{ padding: '24px 32px', maxWidth: 1100, fontFamily: FONT }}>
+      <h1 style={{ fontSize: 24, fontWeight: 600, color: C.N800, margin: '0 0 4px' }}>
         PageFlow
       </h1>
-      <p style={{ fontSize: 14, color: '#6B778C', margin: '0 0 24px' }}>
+      <p style={{ fontSize: 14, color: C.N200, margin: '0 0 20px' }}>
         Content-Migration nach Confluence
       </p>
 
-      {/* Space Dropdown */}
-      <div style={{ marginBottom: 20 }}>
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6B778C', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-          Ziel-Space
-        </label>
-        <SpaceDropdown selectedSpace={selectedSpace} onSelectSpace={handleSpaceChange} />
-      </div>
-
-      {/* Tabs */}
       <Tabs activeTab={activeTab} onChangeTab={setActiveTab} />
 
-      {/* Tab Content */}
-      <div style={{ padding: '20px 0' }}>
-        {activeTab === 'pdf-import' && (
-          <BatchImportPDF selection={selection} spaceId={selectedSpace?.id ?? null} />
-        )}
-        {activeTab === 'onenote-import' && (
-          <>
-            <NotebookBrowser onSelectionChange={handleOneNoteChange} />
-            {oneNoteSelection.pages.length > 0 && (
-              <div style={{
-                marginTop: 12,
-                padding: '10px 14px',
-                backgroundColor: '#DEEBFF',
-                borderRadius: 6,
-                fontSize: 14,
-                color: '#172B4D',
-                border: '1px solid #B3D4FF',
-              }}>
-                <strong>{oneNoteSelection.pages.length}</strong> OneNote-Seite{oneNoteSelection.pages.length !== 1 ? 'n' : ''} ausgewählt
-              </div>
-            )}
-            <div style={{ marginTop: 12 }}>
-              <ImportButton
-                pages={oneNoteSelection.pages}
-                spaceId={selectedSpace?.id ?? ''}
-                parentId={selectedPageId}
-                disabled={!selectedSpace}
-              />
+      <div style={{ paddingTop: 20 }}>
+        {isImportTab ? (
+          <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', minHeight: 500 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <span style={SECTION_LABEL}>Quelle</span>
+              {renderSourceContent()}
             </div>
+            {renderTargetPanel()}
+          </div>
+        ) : (
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <span style={SECTION_LABEL}>Space</span>
+              <SpaceDropdown selectedSpace={selectedSpace} onSelectSpace={handleSpaceChange} />
+            </div>
+            <BatchExportPDF
+              spaceKey={selectedSpace?.key ?? null}
+              spaceId={selectedSpace?.id ?? null}
+            />
           </>
         )}
-        {activeTab === 'pdf-export' && (
-          <BatchExportPDF
-            spaceKey={selectedSpace?.key ?? null}
-            spaceId={selectedSpace?.id ?? null}
-          />
-        )}
       </div>
-
-      {/* Shared Page Tree (target selection) — only for import tabs */}
-      {selectedSpace && activeTab !== 'pdf-export' && (
-        <PageTree
-          spaceKey={selectedSpace.key}
-          spaceId={selectedSpace.id}
-          selectedPageId={selectedPageId}
-          onSelectPage={handlePageChange}
-        />
-      )}
-
-      {/* Selection Summary — only for import tabs */}
-      {selection && activeTab !== 'pdf-export' && (
-        <div style={{
-          marginTop: 12,
-          padding: '10px 14px',
-          backgroundColor: '#E3FCEF',
-          borderRadius: 6,
-          fontSize: 14,
-          color: '#172B4D',
-          border: '1px solid #ABF5D1',
-        }}>
-          Ziel: <strong>{selection.spaceKey}</strong>
-          {selection.pageId
-            ? <> | Seite: <strong>{selection.pageId}</strong></>
-            : <> | <em style={{ color: '#6B778C' }}>Space Root</em></>
-          }
-        </div>
-      )}
     </div>
   );
 };
