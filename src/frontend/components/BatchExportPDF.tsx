@@ -28,7 +28,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
     if (!file) return;
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return;
     if (file.size > 5 * 1024 * 1024) {
-      setError('Briefpapier-PDF darf max. 5 MB gross sein');
+      setError('Stationery PDF must not exceed 5 MB');
       return;
     }
     setStationeryFile(file);
@@ -59,7 +59,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
         const buffer = await stationeryFile.arrayBuffer();
         const bytes = new Uint8Array(buffer);
         if (bytes.length < 5 || String.fromCharCode(...bytes.slice(0, 5)) !== '%PDF-') {
-          throw new Error('Ungültige Briefpapier-Datei (kein gültiges PDF)');
+          throw new Error('Invalid stationery file (not a valid PDF)');
         }
         stationeryBytes = bytes;
       }
@@ -69,7 +69,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
       for (let i = 0; i < pageIds.length; i++) {
         if (cancelRef.current) break;
 
-        setCurrentTitle(`Lade Seite ${i + 1}/${pageIds.length}...`);
+        setCurrentTitle(`Loading page ${i + 1}/${pageIds.length}...`);
         setProgress({ current: i, total: pageIds.length });
 
         try {
@@ -83,7 +83,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
         } catch {
           exportPages.push({
             id: pageIds[i],
-            title: `Seite ${pageIds[i]}`,
+            title: `Page ${pageIds[i]}`,
             blocks: [{ type: 'placeholder' as const }],
             depth: 0,
           });
@@ -96,10 +96,10 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
       }
 
       // Generate PDF
-      setCurrentTitle('PDF wird generiert...');
+      setCurrentTitle('Generating PDF...');
       const pdfBytes = await generatePdf(exportPages, stationeryBytes, (current, total) => {
         setProgress({ current, total });
-        setCurrentTitle(`Rendere Seite ${current}/${total}...`);
+        setCurrentTitle(`Rendering page ${current}/${total}...`);
       });
 
       // Download
@@ -108,7 +108,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
       setExportedCount(exportPages.length);
       setPhase('done');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Export fehlgeschlagen');
+      setError(err instanceof Error ? err.message : 'Export failed');
       setPhase('done');
     }
   }, [spaceId, selectedIds, stationeryFile, reset]);
@@ -124,7 +124,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
         borderRadius: 8,
         border: `1px solid ${C.N40}`,
       }}>
-        Bitte zuerst einen Ziel-Space auswählen
+        Please select a target space first
       </div>
     );
   }
@@ -144,7 +144,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
         <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.N200, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Briefpapier (optional)
+              Stationery (optional)
             </label>
             <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
@@ -166,7 +166,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
                     cursor: 'pointer',
                   }}
                 >
-                  Entfernen
+                  Remove
                 </button>
               )}
             </div>
@@ -174,7 +174,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
 
           {selectedIds.size > MAX_PAGES && (
             <div style={{ padding: '8px 12px', backgroundColor: C.R75, fontSize: 13, color: C.R400, borderRadius: 4 }}>
-              Max. {MAX_PAGES} Seiten pro Export. Bitte Auswahl reduzieren.
+              Max. {MAX_PAGES} pages per export. Please reduce your selection.
             </div>
           )}
 
@@ -193,7 +193,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
               alignSelf: 'flex-start',
             }}
           >
-            {selectedIds.size} Seite{selectedIds.size !== 1 ? 'n' : ''} exportieren
+            Export {selectedIds.size} page{selectedIds.size !== 1 ? 's' : ''}
           </button>
         </div>
       </div>
@@ -206,7 +206,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
     return (
       <div>
         <div style={{ fontSize: 14, fontWeight: 500, color: C.N800, marginBottom: 8 }}>
-          Export läuft... {progress.current}/{progress.total}
+          Exporting... {progress.current}/{progress.total}
         </div>
         <div style={{ height: 6, backgroundColor: C.N20, borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
           <div style={{ height: '100%', width: `${pct}%`, backgroundColor: C.B400, borderRadius: 3, transition: 'width 0.3s' }} />
@@ -224,7 +224,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
             cursor: 'pointer',
           }}
         >
-          Abbrechen
+          Cancel
         </button>
       </div>
     );
@@ -241,10 +241,10 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
         marginBottom: 12,
       }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: C.N800, marginBottom: 4 }}>
-          {error ? 'Export fehlgeschlagen' : 'Export abgeschlossen'}
+          {error ? 'Export failed' : 'Export completed'}
         </div>
         <div style={{ fontSize: 13, color: C.N800 }}>
-          {error ? error : `${exportedCount} Seite${exportedCount !== 1 ? 'n' : ''} exportiert. PDF wurde heruntergeladen.`}
+          {error ? error : `${exportedCount} page${exportedCount !== 1 ? 's' : ''} exported. PDF has been downloaded.`}
         </div>
       </div>
 
@@ -261,7 +261,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
           cursor: 'pointer',
         }}
       >
-        Neuen Export starten
+        Start new export
       </button>
     </div>
   );

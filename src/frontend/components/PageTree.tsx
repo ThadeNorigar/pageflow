@@ -16,6 +16,7 @@ interface PageTreeProps {
   spaceId: string;
   selectedPageId: string | null;
   onSelectPage: (pageId: string | null) => void;
+  compact?: boolean;
 }
 
 const Spinner: React.FC = () => (
@@ -97,7 +98,7 @@ const PageNode: React.FC<PageNodeProps> = ({ page, depth, selectedPageId, onSele
   );
 };
 
-const PageTree: React.FC<PageTreeProps> = ({ spaceKey, spaceId, selectedPageId, onSelectPage }) => {
+const PageTree: React.FC<PageTreeProps> = ({ spaceKey, spaceId, selectedPageId, onSelectPage, compact }) => {
   const [pages, setPages] = useState<ConfluencePage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -129,6 +130,65 @@ const PageTree: React.FC<PageTreeProps> = ({ spaceKey, spaceId, selectedPageId, 
     return { childrenMap: map, rootPages: roots };
   }, [pages]);
 
+  const header = (
+    <div style={{
+      padding: '10px 12px',
+      fontSize: 11,
+      fontWeight: 700,
+      color: C.N200,
+      textTransform: 'uppercase',
+      letterSpacing: '0.04em',
+      borderBottom: `1px solid ${C.N40}`,
+      backgroundColor: C.N10,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    }}>
+      <span>Target Page</span>
+      {selectedPageId && (
+        <span
+          onClick={() => onSelectPage(null)}
+          style={{
+            fontSize: 11,
+            fontWeight: 500,
+            color: C.B400,
+            cursor: 'pointer',
+            textTransform: 'none',
+            letterSpacing: 'normal',
+          }}
+        >
+          Space Root
+        </span>
+      )}
+    </div>
+  );
+
+  const treeContent = (
+    <div style={{ maxHeight: compact ? 400 : 300, overflowY: 'auto', backgroundColor: '#fff' }}>
+      {loading && <Spinner />}
+      {error && <div style={{ padding: 12, color: C.R400, fontSize: 13 }}>{error}</div>}
+      {!loading && !error && rootPages.length === 0 && (
+        <div style={{ padding: '16px 12px', color: C.N200, fontSize: 14, textAlign: 'center' }}>
+          No pages in this space
+        </div>
+      )}
+      <div style={{ padding: '4px 0' }}>
+        {rootPages.map((page) => (
+          <PageNode key={page.id} page={page} depth={0} selectedPageId={selectedPageId} onSelectPage={handleSelectPage} childrenMap={childrenMap} />
+        ))}
+      </div>
+    </div>
+  );
+
+  if (compact) {
+    return (
+      <>
+        {header}
+        {treeContent}
+      </>
+    );
+  }
+
   return (
     <div style={{
       border: `1px solid ${C.N40}`,
@@ -136,50 +196,8 @@ const PageTree: React.FC<PageTreeProps> = ({ spaceKey, spaceId, selectedPageId, 
       overflow: 'hidden',
       boxShadow: '0 1px 3px rgba(9, 30, 66, 0.08)',
     }}>
-      <div style={{
-        padding: '10px 12px',
-        fontSize: 11,
-        fontWeight: 700,
-        color: C.N200,
-        textTransform: 'uppercase',
-        letterSpacing: '0.04em',
-        borderBottom: `1px solid ${C.N40}`,
-        backgroundColor: C.N10,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}>
-        <span>Ziel-Seite</span>
-        {selectedPageId && (
-          <span
-            onClick={() => onSelectPage(null)}
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: C.B400,
-              cursor: 'pointer',
-              textTransform: 'none',
-              letterSpacing: 'normal',
-            }}
-          >
-            Space Root
-          </span>
-        )}
-      </div>
-      <div style={{ maxHeight: 300, overflowY: 'auto', backgroundColor: '#fff' }}>
-        {loading && <Spinner />}
-        {error && <div style={{ padding: 12, color: C.R400, fontSize: 13 }}>{error}</div>}
-        {!loading && !error && rootPages.length === 0 && (
-          <div style={{ padding: '16px 12px', color: C.N200, fontSize: 14, textAlign: 'center' }}>
-            Keine Seiten in diesem Space
-          </div>
-        )}
-        <div style={{ padding: '4px 0' }}>
-          {rootPages.map((page) => (
-            <PageNode key={page.id} page={page} depth={0} selectedPageId={selectedPageId} onSelectPage={handleSelectPage} childrenMap={childrenMap} />
-          ))}
-        </div>
-      </div>
+      {header}
+      {treeContent}
     </div>
   );
 };

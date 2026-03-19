@@ -133,7 +133,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
 
       let folderPageId = parentId;
       try {
-        setCurrentFile(`Erstelle Ordner: ${node.name}`);
+        setCurrentFile(`Creating folder: ${node.name}`);
         const result = await invoke<{ pageId: string }>('createPage', {
           title: node.name,
           spaceId,
@@ -144,7 +144,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
         importResults.push({
           name: node.name,
           status: 'error',
-          error: err instanceof Error ? err.message : 'Ordner-Seite fehlgeschlagen',
+          error: err instanceof Error ? err.message : 'Folder page failed',
         });
         return;
       }
@@ -160,7 +160,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
           const title = titleFromFilename(file.name);
           const html = await fileToText(file);
           if (html.length > 5 * 1024 * 1024) {
-            throw new Error(`HTML-Datei zu groß (${(html.length / 1024 / 1024).toFixed(1)} MB, max 5 MB)`);
+            throw new Error(`HTML file too large (${(html.length / 1024 / 1024).toFixed(1)} MB, max 5 MB)`);
           }
 
           const conversion = await invoke<ConversionResult>('convertLocalOneNote', { html });
@@ -190,7 +190,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
           importResults.push({
             name: file.name,
             status: 'error',
-            error: err instanceof Error ? err.message : 'Import fehlgeschlagen',
+            error: err instanceof Error ? err.message : 'Import failed',
           });
         }
         setProgress(p => ({ ...p, current: p.current + 1 }));
@@ -226,10 +226,10 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
         >
           <div style={{ fontSize: 28, marginBottom: 8 }}>&#128214;</div>
           <div style={{ fontSize: 14, color: C.N800, fontWeight: 500 }}>
-            OneNote HTML-Export Ordner auswählen
+            Select OneNote HTML export folder
           </div>
           <div style={{ fontSize: 12, color: C.N200, marginTop: 4 }}>
-            Exportiere dein Notebook aus OneNote Desktop als HTML und wähle den Export-Ordner
+            Export your notebook from OneNote Desktop as HTML and select the export folder
           </div>
           <input
             ref={inputRef}
@@ -245,8 +245,8 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
 
   if (phase === 'preview' && tree) {
     const canImport = !!selection && !!spaceId && selectedFileCount > 0 && selectedFileCount <= MAX_FILE_COUNT;
-    const reason = !spaceId ? 'Bitte zuerst einen Space auswählen'
-      : !selection?.pageId ? 'Bitte eine Ziel-Seite im Seitenbaum auswählen'
+    const reason = !spaceId ? 'Please select a space first'
+      : !selection?.pageId ? 'Please select a target page in the page tree'
       : null;
     return (
       <div>
@@ -268,7 +268,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
                 {tree.name}
               </span>
               <span style={{ fontSize: 13, color: C.N200, marginLeft: 8 }}>
-                {selectedFileCount}/{allFileCount} Seite{allFileCount !== 1 ? 'n' : ''} &middot; {fileSizeMB} MB
+                {selectedFileCount}/{allFileCount} page{allFileCount !== 1 ? 's' : ''} &middot; {fileSizeMB} MB
               </span>
             </div>
             <button
@@ -283,7 +283,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
                 cursor: 'pointer',
               }}
             >
-              Ändern
+              Change
             </button>
           </div>
 
@@ -294,16 +294,16 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
                 checked={includeSubfolders}
                 onChange={e => setIncludeSubfolders(e.target.checked)}
               />
-              Sections (Unterordner) einbeziehen
+              Include sections (subfolders)
               {tree.children.length > 0 && (
-                <span style={{ color: C.N200 }}>({tree.children.length} Sections)</span>
+                <span style={{ color: C.N200 }}>({tree.children.length} sections)</span>
               )}
             </label>
           </div>
 
           {selectedFileCount > MAX_FILE_COUNT && (
             <div style={{ padding: '8px 16px', backgroundColor: C.R75, fontSize: 13, color: C.R400 }}>
-              Max. {MAX_FILE_COUNT} Seiten pro Batch.
+              Max. {MAX_FILE_COUNT} pages per batch.
             </div>
           )}
 
@@ -325,7 +325,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
               cursor: canImport ? 'pointer' : 'default',
             }}
           >
-            {selectedFileCount} Seite{selectedFileCount !== 1 ? 'n' : ''} importieren
+            Import {selectedFileCount} page{selectedFileCount !== 1 ? 's' : ''}
           </button>
           {!canImport && reason && (
             <div style={{ marginTop: 6, fontSize: 12, color: C.N200 }}>
@@ -342,7 +342,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
     return (
       <div>
         <div style={{ fontSize: 14, fontWeight: 500, color: C.N800, marginBottom: 8 }}>
-          Import läuft... {progress.current}/{progress.total}
+          Importing... {progress.current}/{progress.total}
         </div>
         <div style={{ height: 6, backgroundColor: C.N20, borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
           <div style={{ height: '100%', width: `${pct}%`, backgroundColor: C.B400, borderRadius: 3, transition: 'width 0.3s' }} />
@@ -360,7 +360,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
             cursor: 'pointer',
           }}
         >
-          Abbrechen
+          Cancel
         </button>
       </div>
     );
@@ -379,10 +379,10 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
           marginBottom: 12,
         }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: C.N800, marginBottom: 4 }}>
-            Import abgeschlossen
+            Import completed
           </div>
           <div style={{ fontSize: 13, color: C.N800 }}>
-            {succeeded} erfolgreich{failed > 0 ? `, ${failed} fehlgeschlagen` : ''}
+            {succeeded} successful{failed > 0 ? `, ${failed} failed` : ''}
           </div>
         </div>
 
@@ -416,7 +416,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
             cursor: 'pointer',
           }}
         >
-          Neuen Import starten
+          Start new import
         </button>
       </div>
     );

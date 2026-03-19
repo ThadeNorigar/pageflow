@@ -94,7 +94,7 @@ const ImportButton: React.FC<ImportButtonProps> = ({ pages, spaceId, parentId, d
           cursor: canImport ? 'pointer' : 'default',
         }}
       >
-        {pages.length} Seite{pages.length !== 1 ? 'n' : ''} importieren
+        Import {pages.length} page{pages.length !== 1 ? 's' : ''}
       </button>
     );
   }
@@ -105,7 +105,7 @@ const ImportButton: React.FC<ImportButtonProps> = ({ pages, spaceId, parentId, d
     return (
       <div>
         <div style={{ fontSize: 14, fontWeight: 500, color: C.N800, marginBottom: 8 }}>
-          Import läuft... {current}/{pages.length}
+          Importing... {current}/{pages.length}
         </div>
         <div style={{ height: 6, backgroundColor: C.N20, borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
           <div style={{ height: '100%', width: `${pct}%`, backgroundColor: C.B400, borderRadius: 3, transition: 'width 0.3s' }} />
@@ -123,7 +123,7 @@ const ImportButton: React.FC<ImportButtonProps> = ({ pages, spaceId, parentId, d
             cursor: 'pointer',
           }}
         >
-          Abbrechen
+          Cancel
         </button>
       </div>
     );
@@ -142,10 +142,10 @@ const ImportButton: React.FC<ImportButtonProps> = ({ pages, spaceId, parentId, d
         marginBottom: 12,
       }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: C.N800, marginBottom: 4 }}>
-          Import abgeschlossen
+          Import completed
         </div>
         <div style={{ fontSize: 13, color: C.N800 }}>
-          {succeeded} erfolgreich{failed > 0 ? `, ${failed} fehlgeschlagen` : ''}
+          {succeeded} successful{failed > 0 ? `, ${failed} failed` : ''}
         </div>
       </div>
 
@@ -179,7 +179,7 @@ const ImportButton: React.FC<ImportButtonProps> = ({ pages, spaceId, parentId, d
           cursor: 'pointer',
         }}
       >
-        Neuen Import starten
+        Start new import
       </button>
     </div>
   );

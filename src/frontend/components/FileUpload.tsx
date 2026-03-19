@@ -122,7 +122,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ selection, spaceId }) => {
             ...item,
             status: 'error',
             progress: 0,
-            error: err instanceof Error ? err.message : 'Upload fehlgeschlagen',
+            error: err instanceof Error ? err.message : 'Upload failed',
           } : item
         ));
       }
@@ -154,10 +154,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ selection, spaceId }) => {
       >
         <div style={{ fontSize: 28, marginBottom: 8 }}>&#128196;</div>
         <div style={{ fontSize: 14, color: C.N800, fontWeight: 500 }}>
-          PDF-Dateien hierher ziehen
+          Drag PDF files here
         </div>
         <div style={{ fontSize: 12, color: C.N200, marginTop: 4 }}>
-          oder klicken zum Auswählen (max. 10MB pro Datei)
+          or click to select (max. 10MB per file)
         </div>
         <input
           ref={inputRef}
@@ -216,7 +216,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ selection, spaceId }) => {
                 <span
                   onClick={(e) => { e.stopPropagation(); removeFile(i); }}
                   style={{ cursor: 'pointer', color: C.N200, marginLeft: 8, flexShrink: 0, fontSize: 16, lineHeight: 1 }}
-                  title="Entfernen"
+                  title="Remove"
                 >
                   &times;
                 </span>
@@ -249,7 +249,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ selection, spaceId }) => {
 
       {!selection && (
         <div style={{ marginTop: 8, fontSize: 12, color: C.N200 }}>
-          Bitte zuerst ein Ziel auswählen
+          Please select a target first
         </div>
       )}
     </div>

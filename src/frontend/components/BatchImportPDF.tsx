@@ -96,7 +96,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
       // Create folder page
       let folderPageId = parentId;
       try {
-        setCurrentFile(`Erstelle Ordner: ${node.name}`);
+        setCurrentFile(`Creating folder: ${node.name}`);
         const result = await invoke<{ pageId: string }>('createPage', {
           title: node.name,
           spaceId,
@@ -107,7 +107,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
         importResults.push({
           name: `📁 ${node.name}`,
           status: 'error',
-          error: err instanceof Error ? err.message : 'Ordner-Seite fehlgeschlagen',
+          error: err instanceof Error ? err.message : 'Folder page failed',
         });
         return;
       }
@@ -155,7 +155,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
           importResults.push({
             name: file.name,
             status: 'error',
-            error: err instanceof Error ? err.message : 'Upload fehlgeschlagen',
+            error: err instanceof Error ? err.message : 'Upload failed',
           });
         }
         setProgress(p => ({ ...p, current: p.current + 1 }));
@@ -193,10 +193,10 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
         >
           <div style={{ fontSize: 28, marginBottom: 8 }}>&#128193;</div>
           <div style={{ fontSize: 14, color: C.N800, fontWeight: 500 }}>
-            Ordner auswählen
+            Select folder
           </div>
           <div style={{ fontSize: 12, color: C.N200, marginTop: 4 }}>
-            Alle PDFs im Ordner werden als Confluence-Seiten importiert
+            All PDFs in the folder will be imported as Confluence pages
           </div>
           <input
             ref={inputRef}
@@ -247,7 +247,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
                 cursor: 'pointer',
               }}
             >
-              Ändern
+              Change
             </button>
           </div>
 
@@ -258,16 +258,16 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
                 checked={includeSubfolders}
                 onChange={e => setIncludeSubfolders(e.target.checked)}
               />
-              Unterordner einbeziehen
+              Include subfolders
               {tree.children.length > 0 && (
-                <span style={{ color: C.N200 }}>({tree.children.length} Unterordner)</span>
+                <span style={{ color: C.N200 }}>({tree.children.length} subfolders)</span>
               )}
             </label>
           </div>
 
           {selectedFileCount > MAX_FILE_COUNT && (
             <div style={{ padding: '8px 16px', backgroundColor: C.R75, fontSize: 13, color: C.R400 }}>
-              Max. {MAX_FILE_COUNT} PDFs pro Batch. Bitte Unterordner deaktivieren oder Ordner aufteilen.
+              Max. {MAX_FILE_COUNT} PDFs per batch. Please disable subfolders or split the folder.
             </div>
           )}
 
@@ -276,8 +276,8 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
 
         {(() => {
           const canImport = !!selection && !!spaceId && selectedFileCount > 0 && selectedFileCount <= MAX_FILE_COUNT;
-          const reason = !spaceId ? 'Bitte zuerst einen Space auswählen'
-            : !selection?.pageId ? 'Bitte eine Ziel-Seite im Seitenbaum auswählen'
+          const reason = !spaceId ? 'Please select a space first'
+            : !selection?.pageId ? 'Please select a target page in the page tree'
             : null;
           return (
             <div style={{ marginTop: 12 }}>
@@ -295,7 +295,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
                   cursor: canImport ? 'pointer' : 'default',
                 }}
               >
-                {selectedFileCount} PDF{selectedFileCount !== 1 ? 's' : ''} importieren
+                Import {selectedFileCount} PDF{selectedFileCount !== 1 ? 's' : ''}
               </button>
               {!canImport && reason && (
                 <div style={{ marginTop: 6, fontSize: 12, color: C.N200 }}>
@@ -315,7 +315,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
     return (
       <div>
         <div style={{ fontSize: 14, fontWeight: 500, color: C.N800, marginBottom: 8 }}>
-          Import läuft... {progress.current}/{progress.total}
+          Importing... {progress.current}/{progress.total}
         </div>
         <div style={{ height: 6, backgroundColor: C.N20, borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
           <div style={{ height: '100%', width: `${pct}%`, backgroundColor: C.B400, borderRadius: 3, transition: 'width 0.3s' }} />
@@ -333,7 +333,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
             cursor: 'pointer',
           }}
         >
-          Abbrechen
+          Cancel
         </button>
       </div>
     );
@@ -353,10 +353,10 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
           marginBottom: 12,
         }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: C.N800, marginBottom: 4 }}>
-            Import abgeschlossen
+            Import completed
           </div>
           <div style={{ fontSize: 13, color: C.N800 }}>
-            {succeeded} erfolgreich{failed > 0 ? `, ${failed} fehlgeschlagen` : ''}
+            {succeeded} successful{failed > 0 ? `, ${failed} failed` : ''}
           </div>
         </div>
 
@@ -390,7 +390,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
             cursor: 'pointer',
           }}
         >
-          Neuen Import starten
+          Start new import
         </button>
       </div>
     );

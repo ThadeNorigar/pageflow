@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { invoke } from '@forge/bridge';
+import { C } from '../utils/colors';
 
 interface Notebook {
   id: string;
@@ -25,20 +26,6 @@ export interface OneNoteSelection {
 interface NotebookBrowserProps {
   onSelectionChange: (selection: OneNoteSelection) => void;
 }
-
-const C = {
-  N900: '#091E42',
-  N800: '#172B4D',
-  N200: '#6B778C',
-  N40: '#DFE1E6',
-  N20: '#F4F5F7',
-  N10: '#FAFBFC',
-  B400: '#0052CC',
-  B75: '#DEEBFF',
-  R400: '#DE350B',
-  G75: '#E3FCEF',
-  Y75: '#FFF0B3',
-};
 
 const Spinner: React.FC<{ inline?: boolean }> = ({ inline }) => (
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: inline ? '0 4px' : '12px', color: C.N200, fontSize: 13 }}>
@@ -214,7 +201,7 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
     }
   }, [expandedIds, sectionsCache, pagesCache]);
 
-  const togglePage = useCallback((page: OneNotePage, sectionId: string) => {
+  const togglePage = useCallback((page: OneNotePage) => {
     setSelectedPageIds(prev => {
       const next = new Set(prev);
       if (next.has(page.id)) {
@@ -285,10 +272,10 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
         <div style={{ padding: '24px 16px', textAlign: 'center' }}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>🔗</div>
           <div style={{ fontSize: 14, color: C.N800, fontWeight: 500, marginBottom: 4 }}>
-            Microsoft-Konto verbinden
+            Connect Microsoft Account
           </div>
           <div style={{ fontSize: 12, color: C.N200, marginBottom: 16 }}>
-            Verbinden Sie Ihr Microsoft-Konto, um auf OneNote-Notebooks zuzugreifen.
+            Connect your Microsoft account to access OneNote notebooks.
           </div>
           {authStatus.error && (
             <div style={{ fontSize: 12, color: C.R400, marginBottom: 12 }}>{authStatus.error}</div>
@@ -346,7 +333,7 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
         )}
         {!loading && notebooks.length === 0 && !error && (
           <div style={{ padding: '24px 16px', color: C.N200, fontSize: 14, textAlign: 'center' }}>
-            Keine Notebooks gefunden
+            No notebooks found
           </div>
         )}
 
@@ -387,8 +374,8 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
                         icon="📝"
                         showCheckbox
                         checked={selectedPageIds.has(page.id)}
-                        onToggle={() => togglePage(page, section.id)}
-                        onCheck={() => togglePage(page, section.id)}
+                        onToggle={() => togglePage(page)}
+                        onCheck={() => togglePage(page)}
                       />
                     ))}
                   </div>

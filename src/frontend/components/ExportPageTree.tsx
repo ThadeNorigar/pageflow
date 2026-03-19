@@ -187,7 +187,7 @@ const ExportPageTree: React.FC<ExportPageTreeProps> = ({ spaceKey, spaceId, sele
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-        <span>Seiten auswählen ({selectedIds.size})</span>
+        <span>Select pages ({selectedIds.size})</span>
         <span style={{ display: 'flex', gap: 8 }}>
           <span
             onClick={selectAll}
@@ -208,7 +208,7 @@ const ExportPageTree: React.FC<ExportPageTreeProps> = ({ spaceKey, spaceId, sele
         {error && <div style={{ padding: 12, color: C.R400, fontSize: 13 }}>{error}</div>}
         {!loading && !error && rootPages.length === 0 && (
           <div style={{ padding: '16px 12px', color: C.N200, fontSize: 14, textAlign: 'center' }}>
-            Keine Seiten in diesem Space
+            No pages in this space
           </div>
         )}
         <div style={{ padding: '4px 0' }}>

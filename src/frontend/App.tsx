@@ -66,7 +66,7 @@ const App: React.FC = () => {
               color: C.N800,
               border: '1px solid #B3D4FF',
             }}>
-              <strong>{oneNoteSelection.pages.length}</strong> OneNote-Seite{oneNoteSelection.pages.length !== 1 ? 'n' : ''} ausgewählt
+              <strong>{oneNoteSelection.pages.length}</strong> OneNote page{oneNoteSelection.pages.length !== 1 ? 's' : ''} selected
             </div>
           )}
           <div style={{ marginTop: 12 }}>
@@ -88,7 +88,7 @@ const App: React.FC = () => {
 
   const renderTargetPanel = () => (
     <div style={{ width: 380, flexShrink: 0 }}>
-      <span style={SECTION_LABEL}>Ziel</span>
+      <span style={SECTION_LABEL}>Target</span>
       <div style={{
         border: `1px solid ${C.N40}`,
         borderRadius: 8,
@@ -108,7 +108,7 @@ const App: React.FC = () => {
         )}
         {!selectedSpace && (
           <div style={{ padding: '24px 16px', textAlign: 'center', color: C.N200, fontSize: 13 }}>
-            Space auswählen um Ziel-Seite zu sehen
+            Select a space to see target pages
           </div>
         )}
       </div>
@@ -121,7 +121,7 @@ const App: React.FC = () => {
         PageFlow
       </h1>
       <p style={{ fontSize: 14, color: C.N200, margin: '0 0 20px' }}>
-        Content-Migration nach Confluence
+        Content migration to Confluence
       </p>
 
       <Tabs activeTab={activeTab} onChangeTab={setActiveTab} />
@@ -130,7 +130,7 @@ const App: React.FC = () => {
         {isImportTab ? (
           <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', minHeight: 500 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <span style={SECTION_LABEL}>Quelle</span>
+              <span style={SECTION_LABEL}>Source</span>
               {renderSourceContent()}
             </div>
             {renderTargetPanel()}

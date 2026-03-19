@@ -83,7 +83,7 @@ const SpaceDropdown: React.FC<SpaceDropdownProps> = ({ selectedSpace, onSelectSp
         }}
       >
         <span>
-          {loading ? 'Spaces laden...' : selectedSpace ? `${selectedSpace.name} (${selectedSpace.key})` : 'Space auswählen...'}
+          {loading ? 'Loading spaces...' : selectedSpace ? `${selectedSpace.name} (${selectedSpace.key})` : 'Select space...'}
         </span>
         <svg width="16" height="16" viewBox="0 0 24 24" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
           <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -111,7 +111,7 @@ const SpaceDropdown: React.FC<SpaceDropdownProps> = ({ selectedSpace, onSelectSp
               ref={inputRef}
               value={filter}
               onChange={e => setFilter(e.target.value)}
-              placeholder="Space suchen..."
+              placeholder="Search spaces..."
               style={{
                 width: '100%',
                 padding: '6px 8px',
@@ -125,7 +125,7 @@ const SpaceDropdown: React.FC<SpaceDropdownProps> = ({ selectedSpace, onSelectSp
           </div>
           <div style={{ overflowY: 'auto', maxHeight: 240 }}>
             {filtered.length === 0 && (
-              <div style={{ padding: '12px 12px', color: C.N200, fontSize: 13 }}>Keine Spaces gefunden</div>
+              <div style={{ padding: '12px 12px', color: C.N200, fontSize: 13 }}>No spaces found</div>
             )}
             {filtered.map(space => (
               <div
