@@ -108,44 +108,18 @@ export async function generatePdf(
     y: PAGE_HEIGHT - MARGIN,
   };
 
-  // Title page
-  state.page.drawText('PDF Export', {
-    x: MARGIN,
-    y: state.y,
-    size: 28,
-    font: fontBold,
-    color: rgb(0.09, 0.17, 0.29),
-  });
-  state.y -= 40;
-
-  state.page.drawText(`${pages.length} Seite${pages.length !== 1 ? 'n' : ''}`, {
-    x: MARGIN,
-    y: state.y,
-    size: 14,
-    font,
-    color: rgb(0.42, 0.47, 0.55),
-  });
-  state.y -= 30;
-
-  // Table of contents
-  for (const p of pages) {
-    const indent = p.depth * 15;
-    state = drawText(state, doc, `${'  '.repeat(p.depth)}${p.title}`, font, 11, embedded, indent);
-  }
-
   // Content pages
+  let firstPage = true;
   for (let i = 0; i < pages.length; i++) {
     const p = pages[i];
     onProgress?.(i + 1, pages.length);
 
-    const newPage = addPageWithStationery(doc, embedded);
-    state = { page: newPage, y: PAGE_HEIGHT - MARGIN };
-
-    // Page title as chapter heading
-    const headingLevel = Math.min(p.depth + 1, 6);
-    const titleSize = HEADING_SIZES[headingLevel] ?? 14;
-    state = drawText(state, doc, p.title, fontBold, titleSize, embedded);
-    state.y -= 10;
+    if (firstPage) {
+      firstPage = false;
+    } else {
+      const newPage = addPageWithStationery(doc, embedded);
+      state = { page: newPage, y: PAGE_HEIGHT - MARGIN };
+    }
 
     // Render content blocks
     for (const block of p.blocks) {

@@ -94,7 +94,7 @@ export function convertOneNoteHtml(html: string): ConversionResult {
   const parts: string[] = [];
   const push = (s: string) => { parts.push(s); };
   let inBody = false;
-  let hasBody = html.toLowerCase().includes('<body');
+  const hasBody = html.toLowerCase().includes('<body');
   let skipDepth = 0;
   const tagStack: string[] = [];
 

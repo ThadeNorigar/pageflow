@@ -7,7 +7,7 @@ export interface PageBody {
   blocks: ContentBlock[];
 }
 
-const VALID_PAGE_ID = /^[a-zA-Z0-9\-]+$/;
+const VALID_PAGE_ID = /^[a-zA-Z0-9-]+$/;
 
 export async function getPageBody(pageId: string): Promise<PageBody> {
   if (!pageId || !VALID_PAGE_ID.test(pageId)) {

@@ -51,8 +51,6 @@ function extractTableRows(html: string): string[][] {
   return rows;
 }
 
-const TOP_LEVEL_REGEX = /<(h[1-6]|p|ul|ol|table|ac:[a-z\-]+|div)(?:\s[^>]*)?>[\s\S]*?<\/\1>/gi;
-
 function parseTopLevelTag(tag: string, content: string): ContentBlock | null {
   const lower = tag.toLowerCase();
 
@@ -81,7 +79,7 @@ export function parseStorageFormat(xhtml: string): ContentBlock[] {
   if (!trimmed) return [];
 
   const blocks: ContentBlock[] = [];
-  const regex = /<(h[1-6]|p|ul|ol|table|ac:[a-z\-]+|div)(?:\s[^>]*)?>[\s\S]*?<\/\1>/gi;
+  const regex = /<(h[1-6]|p|ul|ol|table|ac:[a-z-]+|div)(?:\s[^>]*)?>[\s\S]*?<\/\1>/gi;
   let match;
 
   while ((match = regex.exec(trimmed)) !== null) {

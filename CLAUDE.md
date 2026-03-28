@@ -238,3 +238,17 @@ bd sync                         # Git-Sync
 
 - **NIEMALS** Credentials/API Keys/Passwörter/Tokens in Chat-Antworten ausgeben
 - **IMMER** Platzhalter verwenden: `sk-...`, `***`, `<your-key-here>`
+
+## Commands
+
+Commands kommen aus drei Ebenen (höhere überschreibt niedrigere bei gleichem Namen):
+
+| Ebene | Pfad | Beschreibung |
+|-------|------|-------------|
+| **User-Global** | `~/.claude/commands/` | Generische Commands für alle Projekte (synced via K2SO) |
+| **Projekt** | `.claude/commands/` | Projekt-spezifische Commands (nur hier gültig) |
+
+**Neuen Command anlegen:**
+- Für ALLE Projekte nützlich → `K2SO/.claude/commands-global/<name>.md` (wird via Symlink zu User-Global)
+- Nur für DIESES Projekt → `.claude/commands/<name>.md`
+- **Nie** generische Commands ins Projekt kopieren — die kommen automatisch via User-Global
