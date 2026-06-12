@@ -13,6 +13,6 @@
     "declaration": true,
     "sourceMap": true
   },
-  "include": ["src/resolvers/**/*.ts"],
+  "include": ["src/resolvers/**/*.ts", "src/shared/**/*.ts", "src/index.ts"],
   "exclude": ["node_modules", "out", "src/frontend"]
 }
