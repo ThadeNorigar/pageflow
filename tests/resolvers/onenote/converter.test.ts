@@ -174,7 +174,7 @@ describe('convertOneNoteHtml', () => {
     expect(result.attachments).toHaveLength(3);
     expect(result.attachments[0].filename).toBe('image-0.jpg');
     expect(result.attachments[0].contentType).toBe('image/jpeg');
-    expect(result.attachments[1].filename).toBe('image-1.png');
+    expect(result.attachments[1].filename).toBe('onenote-456.png');
     expect(result.attachments[1].remoteUrl).toContain('graph.microsoft.com');
     expect(result.attachments[2].filename).toBe('image-2.gif');
     expect(result.attachments[2].contentType).toBe('image/gif');

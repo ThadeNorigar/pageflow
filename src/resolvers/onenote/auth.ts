@@ -66,6 +66,31 @@ export async function requestMicrosoftGraph<T>(path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
+export async function requestMicrosoftGraphBinary(
+  path: string
+): Promise<{ data: Buffer; contentType: string }> {
+  const provider = getProvider();
+
+  if (!(await provider.hasCredentials())) {
+    throw new Error('No Microsoft credentials available. Please authenticate first.');
+  }
+
+  // remoteUrl aus OneNote-HTML ist absolut; provider.fetch erwartet den Pfad relativ zur Remote-baseUrl
+  const relativePath = path.replace(/^https:\/\/graph\.microsoft\.com/i, '');
+
+  const response = await provider.fetch(relativePath);
+  if (!response.ok) {
+    const body = await response.text();
+    throw new MsGraphError(`Microsoft Graph request failed: ${response.status}`, response.status, body);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  return {
+    data: Buffer.from(arrayBuffer),
+    contentType: response.headers.get('content-type') ?? 'application/octet-stream',
+  };
+}
+
 export async function requestMicrosoftGraphText(path: string): Promise<string> {
   const provider = getProvider();
 

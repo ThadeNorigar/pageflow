@@ -41,7 +41,7 @@ const LOCAL_CONTENT_TYPE_MAP: Record<string, string> = {
   gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp', svg: 'image/svg+xml',
 };
 
-function escapeXml(text: string): string {
+export function escapeXml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -124,9 +124,12 @@ export function convertOneNoteHtml(html: string): ConversionResult {
           attachments.push({ filename, data: dataUri.data, contentType: dataUri.contentType });
           push(`<ac:image><ri:attachment ri:filename="${escapeXml(filename)}" /></ac:image>`);
         } else if (src.startsWith('https://graph.microsoft.com/')) {
-          const idx = attachments.length;
-          const filename = `image-${idx}.png`;
-          attachments.push({ filename, data: Buffer.alloc(0), contentType: 'image/png', remoteUrl: src });
+          const declaredType = attribs['data-src-type'] ?? attribs['data-fullres-src-type'] ?? '';
+          const contentType = /^image\/[a-z+.-]+$/i.test(declaredType) ? declaredType.toLowerCase() : 'image/png';
+          const resourceMatch = src.match(/\/onenote\/resources\/([A-Za-z0-9!-]+)\//);
+          const id = resourceMatch ? resourceMatch[1] : `idx${attachments.length}`;
+          const filename = `onenote-${id}.${fileExtension(contentType)}`;
+          attachments.push({ filename, data: Buffer.alloc(0), contentType, remoteUrl: src });
           push(`<ac:image><ri:attachment ri:filename="${escapeXml(filename)}" /></ac:image>`);
         } else if (src && !ABSOLUTE_URL_PATTERN.test(src)) {
           const decodedSrc = decodeURIComponent(src);

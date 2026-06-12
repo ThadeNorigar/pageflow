@@ -13,6 +13,9 @@ interface ImportResult {
   title: string;
   status: 'success' | 'error';
   error?: string;
+  imagesTotal?: number;
+  imagesUploaded?: number;
+  imagesFailed?: number;
 }
 
 interface ImportButtonProps {
@@ -132,6 +135,8 @@ const ImportButton: React.FC<ImportButtonProps> = ({ pages, spaceId, parentId, d
   // DONE
   const succeeded = results.filter(r => r.status === 'success').length;
   const failed = results.filter(r => r.status === 'error').length;
+  const imagesUploaded = results.reduce((sum, r) => sum + (r.imagesUploaded ?? 0), 0);
+  const imagesFailed = results.reduce((sum, r) => sum + (r.imagesFailed ?? 0), 0);
   return (
     <div>
       <div style={{
@@ -146,6 +151,10 @@ const ImportButton: React.FC<ImportButtonProps> = ({ pages, spaceId, parentId, d
         </div>
         <div style={{ fontSize: 13, color: C.N800 }}>
           {succeeded} successful{failed > 0 ? `, ${failed} failed` : ''}
+          {imagesUploaded + imagesFailed > 0 && (
+            <> · {imagesUploaded} image{imagesUploaded !== 1 ? 's' : ''} uploaded
+            {imagesFailed > 0 ? `, ${imagesFailed} failed (see info panels on the pages)` : ''}</>
+          )}
         </div>
       </div>
 
