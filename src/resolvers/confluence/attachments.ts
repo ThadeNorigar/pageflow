@@ -12,6 +12,9 @@ interface UploadAttachmentResult {
   filename: string;
 }
 
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const ALLOWED_MIME_TYPES = /^(application\/pdf|image\/(png|jpeg|gif|webp|bmp|svg\+xml))$/;
+
 export async function uploadAttachment(payload: UploadAttachmentPayload): Promise<UploadAttachmentResult> {
   if (!payload.pageId) {
     throw new Error('pageId must not be empty');
@@ -22,8 +25,14 @@ export async function uploadAttachment(payload: UploadAttachmentPayload): Promis
   if (!payload.fileBase64) {
     throw new Error('fileBase64 must not be empty');
   }
+  if (!ALLOWED_MIME_TYPES.test(payload.mimeType || '')) {
+    throw new Error(`Unsupported file type: ${payload.mimeType || 'unknown'}`);
+  }
 
   const fileBuffer = Buffer.from(payload.fileBase64, 'base64');
+  if (fileBuffer.byteLength > MAX_FILE_BYTES) {
+    throw new Error(`File exceeds 10MB limit (${(fileBuffer.byteLength / 1024 / 1024).toFixed(1)}MB)`);
+  }
   const boundary = `----ForgeAttachment${Date.now()}`;
   const crlf = '\r\n';
 

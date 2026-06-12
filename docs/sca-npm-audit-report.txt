@@ -1,0 +1,50 @@
+# SCA Report (npm audit) — generiert 2026-06-12T20:01:05Z
+# Kommando: npm audit (Root) + npm audit (src/frontend)
+
+## Root — alle Dependencies:
+# npm audit report
+
+uuid  <11.1.1
+Severity: moderate
+uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided - https://github.com/advisories/GHSA-w5hq-g745-h8pq
+fix available via `npm audit fix --force`
+Will install webpack-dev-server@1.16.5, which is a breaking change
+node_modules/uuid
+  sockjs  >=0.3.17
+  Depends on vulnerable versions of uuid
+  node_modules/sockjs
+    webpack-dev-server  >=2.0.0-beta
+    Depends on vulnerable versions of sockjs
+    node_modules/webpack-dev-server
+
+3 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+## Root — production only (--omit=dev):
+found 0 vulnerabilities
+
+## src/frontend — alle Dependencies:
+# npm audit report
+
+uuid  <11.1.1
+Severity: moderate
+uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided - https://github.com/advisories/GHSA-w5hq-g745-h8pq
+fix available via `npm audit fix --force`
+Will install webpack-dev-server@1.16.5, which is a breaking change
+node_modules/uuid
+  sockjs  >=0.3.17
+  Depends on vulnerable versions of uuid
+  node_modules/sockjs
+    webpack-dev-server  >=2.0.0-beta
+    Depends on vulnerable versions of sockjs
+    node_modules/webpack-dev-server
+
+3 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+## src/frontend — production only:
+found 0 vulnerabilities

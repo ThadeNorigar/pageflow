@@ -4,6 +4,7 @@ import { SpaceSelection } from '../types';
 import { C } from '../utils/colors';
 import { buildFolderTree, countFiles, totalSize, FolderNode } from '../utils/folderTree';
 import { validateFile, titleFromFilename } from '../utils/fileValidation';
+import { escapeXml } from '../utils/escapeXml';
 
 interface BatchImportPDFProps {
   selection: SpaceSelection | null;
@@ -33,7 +34,7 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 function viewFileMacro(filename: string): string {
-  return `<ac:structured-macro ac:name="view-file" ac:schema-version="1"><ac:parameter ac:name="name"><ri:attachment ri:filename="${filename}"/></ac:parameter></ac:structured-macro>`;
+  return `<ac:structured-macro ac:name="view-file" ac:schema-version="1"><ac:parameter ac:name="name"><ri:attachment ri:filename="${escapeXml(filename)}"/></ac:parameter></ac:structured-macro>`;
 }
 
 const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) => {

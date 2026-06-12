@@ -8,7 +8,7 @@
     "build:frontend": "npm run build --workspace=src/frontend",
     "build:all": "npm run build && npm run build:frontend",
     "test": "jest --passWithNoTests",
-    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "lint": "eslint src --ext .ts,.tsx",
     "format": "prettier --write 'src/**/*.{ts,tsx,json,css}'"
   },
   "workspaces": [

@@ -1,0 +1,4 @@
+# SAST Report (ESLint) — generiert 2026-06-12T20:01:42Z
+# Kommando: npx eslint src --ext .ts,.tsx
+
+Exit-Code: 0

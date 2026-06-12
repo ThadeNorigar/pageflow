@@ -8,19 +8,19 @@ describe('validateFile', () => {
 
   it('rejects non-PDF file types', () => {
     const file = { name: 'image.png', type: 'image/png', size: 1024 };
-    expect(validateFile(file)).toBe('"image.png" ist keine PDF-Datei');
+    expect(validateFile(file)).toBe('"image.png" is not a PDF file');
   });
 
   it('rejects files over 10MB', () => {
     const file = { name: 'huge.pdf', type: 'application/pdf', size: 11 * 1024 * 1024 };
     const result = validateFile(file);
-    expect(result).toContain('"huge.pdf" ist größer als 10MB');
+    expect(result).toContain('"huge.pdf" exceeds 10MB');
     expect(result).toContain('11.0MB');
   });
 
   it('rejects empty MIME type', () => {
     const file = { name: 'noext', type: '', size: 100 };
-    expect(validateFile(file)).toBe('"noext" ist keine PDF-Datei');
+    expect(validateFile(file)).toBe('"noext" is not a PDF file');
   });
 
   it('accepts PDF at exactly 10MB', () => {
@@ -30,12 +30,12 @@ describe('validateFile', () => {
 
   it('rejects PDF at 10MB + 1 byte', () => {
     const file = { name: 'over.pdf', type: 'application/pdf', size: 10 * 1024 * 1024 + 1 };
-    expect(validateFile(file)).toContain('größer als 10MB');
+    expect(validateFile(file)).toContain('exceeds 10MB');
   });
 
   it('rejects Word documents', () => {
     const file = { name: 'doc.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', size: 1024 };
-    expect(validateFile(file)).toBe('"doc.docx" ist keine PDF-Datei');
+    expect(validateFile(file)).toBe('"doc.docx" is not a PDF file');
   });
 
   it('accepts PDF by extension even with wrong MIME type', () => {

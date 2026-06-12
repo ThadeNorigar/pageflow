@@ -113,4 +113,32 @@ describe('uploadAttachment', () => {
     ).rejects.toThrow('fileBase64 must not be empty');
     expect(mockRequestConfluence).not.toHaveBeenCalled();
   });
+
+  it('should throw on disallowed mime type', async () => {
+    await expect(
+      uploadAttachment({ pageId: 'p1', filename: 'evil.exe', fileBase64: 'abc', mimeType: 'application/x-msdownload' })
+    ).rejects.toThrow('Unsupported file type: application/x-msdownload');
+    expect(mockRequestConfluence).not.toHaveBeenCalled();
+  });
+
+  it('should accept image mime types', async () => {
+    mockRequestConfluence.mockResolvedValue(
+      apiResponse({ results: [{ id: 'att-3', title: 'pic.png' }] })
+    );
+    const result = await uploadAttachment({
+      pageId: 'p1',
+      filename: 'pic.png',
+      fileBase64: Buffer.from('png-bytes').toString('base64'),
+      mimeType: 'image/png',
+    });
+    expect(result.attachmentId).toBe('att-3');
+  });
+
+  it('should throw when file exceeds 10MB', async () => {
+    const big = Buffer.alloc(10 * 1024 * 1024 + 1).toString('base64');
+    await expect(
+      uploadAttachment({ pageId: 'p1', filename: 'big.pdf', fileBase64: big, mimeType: 'application/pdf' })
+    ).rejects.toThrow('File exceeds 10MB limit');
+    expect(mockRequestConfluence).not.toHaveBeenCalled();
+  });
 });
