@@ -30,6 +30,14 @@ module.exports = {
         test: /\.css$/,
         use: ['style-loader', 'css-loader'],
       },
+      {
+        test: /\.ttf$/,
+        type: 'asset/inline',
+        generator: {
+          // pdfMake.vfs erwartet rohes Base64 ohne data:-Prefix
+          dataUrl: (content) => content.toString('base64'),
+        },
+      },
     ],
   },
   plugins: [

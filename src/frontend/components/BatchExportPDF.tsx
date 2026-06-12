@@ -11,6 +11,11 @@ interface BatchExportPDFProps {
 
 type Phase = 'select' | 'generating' | 'done';
 
+interface FailedPage {
+  pageId: string;
+  error: string;
+}
+
 const MAX_PAGES = 50;
 
 const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) => {
@@ -20,6 +25,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [currentTitle, setCurrentTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [failedPages, setFailedPages] = useState<FailedPage[]>([]);
   const [exportedCount, setExportedCount] = useState(0);
   const cancelRef = useRef(false);
 
@@ -36,9 +42,11 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
 
   const reset = useCallback(() => {
     setPhase('select');
+    setSelectedIds(new Set());
     setProgress({ current: 0, total: 0 });
     setCurrentTitle('');
     setError(null);
+    setFailedPages([]);
     setExportedCount(0);
   }, []);
 
@@ -66,6 +74,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
 
       // Fetch page bodies
       const exportPages: ExportPage[] = [];
+      const failed: FailedPage[] = [];
       for (let i = 0; i < pageIds.length; i++) {
         if (cancelRef.current) break;
 
@@ -80,12 +89,10 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
             blocks: body.blocks as ExportPage['blocks'],
             depth: 0,
           });
-        } catch {
-          exportPages.push({
-            id: pageIds[i],
-            title: `Page ${pageIds[i]}`,
-            blocks: [{ type: 'placeholder' as const }],
-            depth: 0,
+        } catch (err) {
+          failed.push({
+            pageId: pageIds[i],
+            error: err instanceof Error ? err.message : 'Failed to load page',
           });
         }
       }
@@ -93,6 +100,15 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
       if (cancelRef.current) {
         reset();
         return;
+      }
+
+      setFailedPages(failed);
+      if (exportPages.length === 0) {
+        throw new Error(
+          failed.length > 0
+            ? `No pages could be loaded (first error: ${failed[0].error})`
+            : 'No pages selected'
+        );
       }
 
       // Generate PDF
@@ -231,21 +247,34 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
   }
 
   // DONE phase
+  const isPartial = !error && failedPages.length > 0;
   return (
     <div>
       <div style={{
         padding: '16px',
         borderRadius: 8,
-        backgroundColor: error ? C.R75 : C.G75,
-        border: `1px solid ${error ? C.R400 : '#ABF5D1'}`,
+        backgroundColor: error ? C.R75 : isPartial ? '#FFF7D6' : C.G75,
+        border: `1px solid ${error ? C.R400 : isPartial ? '#E2B203' : '#ABF5D1'}`,
         marginBottom: 12,
       }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: C.N800, marginBottom: 4 }}>
-          {error ? 'Export failed' : 'Export completed'}
+          {error ? 'Export failed' : isPartial ? 'Export completed with errors' : 'Export completed'}
         </div>
         <div style={{ fontSize: 13, color: C.N800 }}>
           {error ? error : `${exportedCount} page${exportedCount !== 1 ? 's' : ''} exported. PDF has been downloaded.`}
         </div>
+        {!error && failedPages.length > 0 && (
+          <div style={{ marginTop: 8, fontSize: 13, color: C.N800 }}>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>
+              {failedPages.length} page{failedPages.length !== 1 ? 's' : ''} could not be loaded:
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              {failedPages.map(f => (
+                <li key={f.pageId}>Page {f.pageId}: {f.error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <button
