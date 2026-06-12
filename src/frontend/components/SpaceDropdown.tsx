@@ -102,7 +102,7 @@ const SpaceDropdown: React.FC<SpaceDropdownProps> = ({ selectedSpace, onSelectSp
           borderRadius: 3,
           boxShadow: '0 4px 12px rgba(9, 30, 66, 0.15)',
           zIndex: 100,
-          maxHeight: 300,
+          maxHeight: 'min(60vh, 620px)',
           display: 'flex',
           flexDirection: 'column',
         }}>
@@ -123,7 +123,7 @@ const SpaceDropdown: React.FC<SpaceDropdownProps> = ({ selectedSpace, onSelectSp
               }}
             />
           </div>
-          <div style={{ overflowY: 'auto', maxHeight: 240 }}>
+          <div style={{ overflowY: 'auto', maxHeight: 'min(52vh, 560px)' }}>
             {filtered.length === 0 && (
               <div style={{ padding: '12px 12px', color: C.N200, fontSize: 13 }}>No spaces found</div>
             )}

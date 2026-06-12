@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import SpaceDropdown, { ConfluenceSpace } from './components/SpaceDropdown';
 import Tabs from './components/Tabs';
+import HelpBox from './components/HelpBox';
 import PageTree from './components/PageTree';
 import BatchImportPDF from './components/BatchImportPDF';
 import BatchExportPDF from './components/BatchExportPDF';
@@ -127,6 +128,7 @@ const App: React.FC = () => {
       <Tabs activeTab={activeTab} onChangeTab={setActiveTab} />
 
       <div style={{ paddingTop: 20 }}>
+        <HelpBox tab={activeTab} />
         {isImportTab ? (
           <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', minHeight: 500 }}>
             <div style={{ flex: 1, minWidth: 0 }}>

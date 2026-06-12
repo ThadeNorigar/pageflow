@@ -155,6 +155,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
           spaceId={spaceId}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
+          maxPages={MAX_PAGES}
         />
 
         <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>

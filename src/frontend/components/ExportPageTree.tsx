@@ -15,6 +15,7 @@ interface ExportPageTreeProps {
   spaceId: string;
   selectedIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
+  maxPages?: number;
 }
 
 const Spinner: React.FC = () => (
@@ -106,7 +107,7 @@ const PageNode: React.FC<PageNodeProps> = ({ page, depth, selectedIds, onToggle,
   );
 };
 
-const ExportPageTree: React.FC<ExportPageTreeProps> = ({ spaceKey, spaceId, selectedIds, onSelectionChange }) => {
+const ExportPageTree: React.FC<ExportPageTreeProps> = ({ spaceKey, spaceId, selectedIds, onSelectionChange, maxPages = 50 }) => {
   const [pages, setPages] = useState<ConfluencePage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -187,19 +188,21 @@ const ExportPageTree: React.FC<ExportPageTreeProps> = ({ spaceKey, spaceId, sele
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-        <span>Select pages ({selectedIds.size})</span>
+        <span style={{ color: selectedIds.size > maxPages ? C.R400 : C.N200 }}>
+          Select pages ({selectedIds.size} / {maxPages})
+        </span>
         <span style={{ display: 'flex', gap: 8 }}>
           <span
             onClick={selectAll}
             style={{ fontSize: 11, fontWeight: 500, color: C.B400, cursor: 'pointer', textTransform: 'none', letterSpacing: 'normal' }}
           >
-            Alle
+            All
           </span>
           <span
             onClick={selectNone}
             style={{ fontSize: 11, fontWeight: 500, color: C.B400, cursor: 'pointer', textTransform: 'none', letterSpacing: 'normal' }}
           >
-            Keine
+            None
           </span>
         </span>
       </div>
