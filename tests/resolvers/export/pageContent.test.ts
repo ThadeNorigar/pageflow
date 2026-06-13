@@ -51,14 +51,14 @@ describe('getPageBody', () => {
         body: { storage: { value: storageValue } },
       })
     );
-    mockParse.mockReturnValue([{ type: 'paragraph', text: 'Hello' }]);
+    mockParse.mockReturnValue([{ type: 'paragraph', runs: [{ text: 'Hello' }] }]);
 
     const result = await getPageBody('12345');
 
     expect(result).toEqual({
       id: '12345',
       title: 'Test Page',
-      blocks: [{ type: 'paragraph', text: 'Hello' }],
+      blocks: [{ type: 'paragraph', runs: [{ text: 'Hello' }] }],
     });
     expect(mockRequestConfluence).toHaveBeenCalledWith(
       expect.stringContaining('/wiki/api/v2/pages/12345'),
@@ -122,7 +122,7 @@ describe('getPageBody', () => {
         body: { storage: { value: '<p>OK</p>' } },
       })
     );
-    mockParse.mockReturnValue([{ type: 'paragraph', text: 'OK' }]);
+    mockParse.mockReturnValue([{ type: 'paragraph', runs: [{ text: 'OK' }] }]);
 
     const result = await getPageBody('42');
 

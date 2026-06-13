@@ -3,6 +3,9 @@ import { invoke } from '@forge/bridge';
 import { C } from '../utils/colors';
 import ExportPageTree from './ExportPageTree';
 import { generatePdf, downloadPdf, ExportPage } from '../utils/pdfExport';
+import { buildDocx, docxToBlob, downloadDocx } from '../utils/docxExport';
+
+type ExportFormat = 'pdf' | 'word';
 
 interface BatchExportPDFProps {
   spaceKey: string | null;
@@ -20,6 +23,7 @@ const MAX_PAGES = 50;
 
 const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) => {
   const [phase, setPhase] = useState<Phase>('select');
+  const [format, setFormat] = useState<ExportFormat>('pdf');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [stationeryFile, setStationeryFile] = useState<File | null>(null);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
@@ -61,9 +65,9 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
     setProgress({ current: 0, total: pageIds.length });
 
     try {
-      // Load and validate stationery bytes
+      // Load and validate stationery bytes (PDF only)
       let stationeryBytes: Uint8Array | undefined;
-      if (stationeryFile) {
+      if (format === 'pdf' && stationeryFile) {
         const buffer = await stationeryFile.arrayBuffer();
         const bytes = new Uint8Array(buffer);
         if (bytes.length < 5 || String.fromCharCode(...bytes.slice(0, 5)) !== '%PDF-') {
@@ -111,23 +115,28 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
         );
       }
 
-      // Generate PDF
-      setCurrentTitle('Generating PDF...');
-      const pdfBytes = await generatePdf(exportPages, stationeryBytes, (current, total) => {
-        setProgress({ current, total });
-        setCurrentTitle(`Rendering page ${current}/${total}...`);
-      });
-
-      // Download
-      const filename = `export-${new Date().toISOString().slice(0, 10)}.pdf`;
-      downloadPdf(pdfBytes, filename);
+      // Generate document
+      const dateStr = new Date().toISOString().slice(0, 10);
+      if (format === 'word') {
+        setCurrentTitle('Generating Word document...');
+        setProgress({ current: exportPages.length, total: exportPages.length });
+        const blob = await docxToBlob(buildDocx(exportPages));
+        downloadDocx(blob, `export-${dateStr}.docx`);
+      } else {
+        setCurrentTitle('Generating PDF...');
+        const pdfBytes = await generatePdf(exportPages, stationeryBytes, (current, total) => {
+          setProgress({ current, total });
+          setCurrentTitle(`Rendering page ${current}/${total}...`);
+        });
+        downloadPdf(pdfBytes, `export-${dateStr}.pdf`);
+      }
       setExportedCount(exportPages.length);
       setPhase('done');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Export failed');
       setPhase('done');
     }
-  }, [spaceId, selectedIds, stationeryFile, reset]);
+  }, [spaceId, selectedIds, stationeryFile, format, reset]);
 
   if (!spaceKey || !spaceId) {
     return (
@@ -161,33 +170,60 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
         <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: C.N200, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Stationery (optional)
+              Format
             </label>
-            <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={handleStationeryChange}
-                style={{ fontSize: 13 }}
-              />
-              {stationeryFile && (
+            <div style={{ marginTop: 4, display: 'inline-flex', border: `1px solid ${C.N40}`, borderRadius: 4, overflow: 'hidden' }}>
+              {(['pdf', 'word'] as ExportFormat[]).map(f => (
                 <button
-                  onClick={() => setStationeryFile(null)}
+                  key={f}
+                  onClick={() => setFormat(f)}
                   style={{
-                    padding: '2px 8px',
-                    fontSize: 12,
-                    color: C.N200,
-                    background: 'transparent',
-                    border: `1px solid ${C.N40}`,
-                    borderRadius: 3,
+                    padding: '6px 18px',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    border: 'none',
                     cursor: 'pointer',
+                    color: format === f ? '#fff' : C.N200,
+                    backgroundColor: format === f ? C.B400 : '#fff',
                   }}
                 >
-                  Remove
+                  {f === 'pdf' ? 'PDF' : 'Word (.docx)'}
                 </button>
-              )}
+              ))}
             </div>
           </div>
+
+          {format === 'pdf' && (
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.N200, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Stationery (optional)
+              </label>
+              <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleStationeryChange}
+                  style={{ fontSize: 13 }}
+                />
+                {stationeryFile && (
+                  <button
+                    onClick={() => setStationeryFile(null)}
+                    style={{
+                      padding: '2px 8px',
+                      fontSize: 12,
+                      color: C.N200,
+                      background: 'transparent',
+                      border: `1px solid ${C.N40}`,
+                      borderRadius: 3,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {selectedIds.size > MAX_PAGES && (
             <div style={{ padding: '8px 12px', backgroundColor: C.R75, fontSize: 13, color: C.R400, borderRadius: 4 }}>
@@ -210,7 +246,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
               alignSelf: 'flex-start',
             }}
           >
-            Export {selectedIds.size} page{selectedIds.size !== 1 ? 's' : ''}
+            Export {selectedIds.size} page{selectedIds.size !== 1 ? 's' : ''} as {format === 'pdf' ? 'PDF' : 'Word'}
           </button>
         </div>
       </div>
@@ -262,7 +298,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
           {error ? 'Export failed' : isPartial ? 'Export completed with errors' : 'Export completed'}
         </div>
         <div style={{ fontSize: 13, color: C.N800 }}>
-          {error ? error : `${exportedCount} page${exportedCount !== 1 ? 's' : ''} exported. PDF has been downloaded.`}
+          {error ? error : `${exportedCount} page${exportedCount !== 1 ? 's' : ''} exported. The ${format === 'pdf' ? 'PDF' : 'Word document'} has been downloaded.`}
         </div>
         {!error && failedPages.length > 0 && (
           <div style={{ marginTop: 8, fontSize: 13, color: C.N800 }}>
