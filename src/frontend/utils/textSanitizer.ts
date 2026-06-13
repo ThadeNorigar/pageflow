@@ -26,14 +26,20 @@ const REPLACEMENTS: Record<string, string> = {
   ' ': ' ', // non-breaking space
 };
 
-// Emojis, Symbole, Dingbats, Variation Selectors, Zero-Width-Joiner
+// Emojis, Symbole, Dingbats, eingekreiste Zeichen, Pfeile
 const UNSUPPORTED_PATTERN =
-  /[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE00}-\u{FE0F}\u{200D}\u{2190}-\u{21FF}\u{2460}-\u{24FF}\u{25A0}-\u{25FF}]/gu;
+  /[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\u{2460}-\u{24FF}\u{25A0}-\u{25FF}]/gu;
+// Variation Selectors und Zero-Width-Joiner separat (sonst bilden sie in einer
+// Character-Class irreführende kombinierte Zeichen — ESLint no-misleading-character-class)
+const COMBINING_PATTERN = /[\u{FE00}-\u{FE0F}]|\u{200D}/gu;
 
 export function sanitizeForPdf(text: string): string {
   let result = '';
   for (const char of text) {
     result += REPLACEMENTS[char] ?? char;
   }
-  return result.replace(UNSUPPORTED_PATTERN, '').replace(/ {2,}/g, ' ');
+  return result
+    .replace(UNSUPPORTED_PATTERN, '')
+    .replace(COMBINING_PATTERN, '')
+    .replace(/ {2,}/g, ' ');
 }
