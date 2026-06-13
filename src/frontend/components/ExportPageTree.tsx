@@ -188,7 +188,10 @@ const ExportPageTree: React.FC<ExportPageTreeProps> = ({ spaceKey, spaceId, sele
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-        <span style={{ color: selectedIds.size > maxPages ? C.R400 : C.N200 }}>
+        <span
+          title={`Up to ${maxPages} pages per export. If you select more, the Export button stays disabled until you reduce the selection.`}
+          style={{ color: selectedIds.size > maxPages ? C.R400 : C.N200, cursor: 'help' }}
+        >
           Select pages ({selectedIds.size} / {maxPages})
         </span>
         <span style={{ display: 'flex', gap: 8 }}>

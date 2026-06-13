@@ -115,8 +115,14 @@ const TreeRow: React.FC<{
   );
 };
 
+interface AuthStatus {
+  authenticated: boolean;
+  error?: string;
+  user?: { displayName?: string; mail?: string };
+}
+
 const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) => {
-  const [authStatus, setAuthStatus] = useState<{ authenticated: boolean; error?: string } | null>(null);
+  const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [sectionsCache, setSectionsCache] = useState<Map<string, Section[]>>(new Map());
   const [pagesCache, setPagesCache] = useState<Map<string, OneNotePage[]>>(new Map());
@@ -128,7 +134,7 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
 
   // Check auth on mount
   useEffect(() => {
-    invoke<{ authenticated: boolean; error?: string }>('checkAuthStatus')
+    invoke<AuthStatus>('checkAuthStatus')
       .then(status => {
         setAuthStatus(status);
         if (status.authenticated) {
@@ -144,7 +150,7 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
     try {
       const result = await invoke<{ notebooks: Notebook[] }>('getNotebooks');
       setNotebooks(result.notebooks);
-      setAuthStatus({ authenticated: true });
+      setAuthStatus(prev => ({ ...prev, authenticated: true }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load notebooks');
     } finally {
@@ -155,7 +161,7 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
   const connectAccount = useCallback(async () => {
     try {
       await invoke('requestAuth');
-      const status = await invoke<{ authenticated: boolean; error?: string }>('checkAuthStatus');
+      const status = await invoke<AuthStatus>('checkAuthStatus');
       setAuthStatus(status);
       if (status.authenticated) {
         loadNotebooks();
@@ -308,12 +314,23 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
       boxShadow: '0 1px 3px rgba(9, 30, 66, 0.08)',
     }}>
       <SectionHeader>
-        <span>OneNote Notebooks</span>
-        {selectedPageIds.size > 0 && (
-          <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 500, color: C.B400, textTransform: 'none', letterSpacing: 'normal' }}>
-            {selectedPageIds.size} page{selectedPageIds.size !== 1 ? 's' : ''} selected
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            OneNote Notebooks
+            {selectedPageIds.size > 0 && (
+              <span style={{ fontSize: 11, fontWeight: 500, color: C.B400, textTransform: 'none', letterSpacing: 'normal' }}>
+                {selectedPageIds.size} page{selectedPageIds.size !== 1 ? 's' : ''} selected
+              </span>
+            )}
           </span>
-        )}
+          <span
+            title={authStatus?.user?.mail || authStatus?.user?.displayName || 'Connected to Microsoft'}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 500, color: C.G400, textTransform: 'none', letterSpacing: 'normal' }}
+          >
+            <span style={{ width: 7, height: 7, borderRadius: '50%', backgroundColor: C.G400, display: 'inline-block' }} />
+            Connected
+          </span>
+        </span>
       </SectionHeader>
 
       <div style={{ maxHeight: 400, overflowY: 'auto', backgroundColor: '#fff' }}>

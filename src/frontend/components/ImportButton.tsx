@@ -82,6 +82,10 @@ const ImportButton: React.FC<ImportButtonProps> = ({ pages, spaceId, parentId, d
   // IDLE
   if (phase === 'idle') {
     const canImport = pages.length > 0 && !disabled;
+    const label =
+      disabled ? 'Select a target space'
+        : pages.length === 0 ? 'Select pages to import'
+          : `Import ${pages.length} page${pages.length !== 1 ? 's' : ''}`;
     return (
       <button
         onClick={startImport}
@@ -97,7 +101,7 @@ const ImportButton: React.FC<ImportButtonProps> = ({ pages, spaceId, parentId, d
           cursor: canImport ? 'pointer' : 'default',
         }}
       >
-        Import {pages.length} page{pages.length !== 1 ? 's' : ''}
+        {label}
       </button>
     );
   }
