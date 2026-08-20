@@ -1,4 +1,11 @@
 import api from '@forge/api';
+import {
+  AuthErrorInfo,
+  AuthErrorKind,
+  AuthErrorOwner,
+  classifyAuthError,
+  formatAuthLogLine,
+} from './authErrors';
 
 const PROVIDER_KEY = 'microsoft-graph';
 const REMOTE_KEY = 'microsoft-graph-api';
@@ -7,22 +14,61 @@ export class MsGraphError extends Error {
   constructor(
     message: string,
     public status: number,
-    public body: string
+    public body: string,
+    public authError?: AuthErrorInfo
   ) {
     super(message);
     this.name = 'MsGraphError';
   }
 }
 
+export interface AuthStatus {
+  authenticated: boolean;
+  user?: { displayName: string; mail: string };
+  error?: string;
+  errorKind?: AuthErrorKind;
+  errorCode?: string;
+  errorOwner?: AuthErrorOwner;
+}
+
 function getProvider() {
   return api.asUser().withProvider(PROVIDER_KEY, REMOTE_KEY);
 }
 
-export async function checkAuthStatus(): Promise<{
-  authenticated: boolean;
-  user?: { displayName: string; mail: string };
-  error?: string;
-}> {
+/**
+ * Forge sammelt console-Ausgaben der Resolver in den App-Logs; darauf greift die
+ * Alert-Regel in der Developer Console zu. Nur klassifizierte Anmeldefehler landen
+ * hier — kein Debug-Logging, keine Rohantwort von Microsoft.
+ */
+function logAuthError(info: AuthErrorInfo, context: string): void {
+  console.error(formatAuthLogLine(info, context));
+}
+
+function toAuthStatusError(raw: unknown, context: string, fallback: string): AuthStatus {
+  const info = classifyAuthError(raw);
+  if (!info) {
+    return { authenticated: false, error: fallback };
+  }
+  logAuthError(info, context);
+  return {
+    authenticated: false,
+    error: info.message,
+    errorKind: info.kind,
+    errorCode: `AADSTS${info.code}`,
+    errorOwner: info.owner,
+  };
+}
+
+function buildGraphError(status: number, body: string): MsGraphError {
+  const info = classifyAuthError(body);
+  if (!info) {
+    return new MsGraphError(`Microsoft Graph request failed: ${status}`, status, body);
+  }
+  logAuthError(info, 'graph-request');
+  return new MsGraphError(`${info.message} (AADSTS${info.code})`, status, body, info);
+}
+
+export async function checkAuthStatus(): Promise<AuthStatus> {
   const provider = getProvider();
 
   if (!(await provider.hasCredentials())) {
@@ -32,7 +78,8 @@ export async function checkAuthStatus(): Promise<{
   try {
     const response = await provider.fetch('/v1.0/me');
     if (!response.ok) {
-      return { authenticated: false, error: `Graph API error: ${response.status}` };
+      const body = await response.text();
+      return toAuthStatusError(body, 'auth-status', `Graph API error: ${response.status}`);
     }
     const user = await response.json();
     return {
@@ -41,7 +88,7 @@ export async function checkAuthStatus(): Promise<{
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return { authenticated: false, error: message };
+    return toAuthStatusError(err, 'auth-status', message);
   }
 }
 
@@ -60,7 +107,7 @@ export async function requestMicrosoftGraph<T>(path: string): Promise<T> {
   const response = await provider.fetch(path);
   if (!response.ok) {
     const body = await response.text();
-    throw new MsGraphError(`Microsoft Graph request failed: ${response.status}`, response.status, body);
+    throw buildGraphError(response.status, body);
   }
 
   return (await response.json()) as T;
@@ -81,7 +128,7 @@ export async function requestMicrosoftGraphBinary(
   const response = await provider.fetch(relativePath);
   if (!response.ok) {
     const body = await response.text();
-    throw new MsGraphError(`Microsoft Graph request failed: ${response.status}`, response.status, body);
+    throw buildGraphError(response.status, body);
   }
 
   const arrayBuffer = await response.arrayBuffer();
@@ -101,7 +148,7 @@ export async function requestMicrosoftGraphText(path: string): Promise<string> {
   const response = await provider.fetch(path);
   if (!response.ok) {
     const body = await response.text();
-    throw new MsGraphError(`Microsoft Graph request failed: ${response.status}`, response.status, body);
+    throw buildGraphError(response.status, body);
   }
 
   return response.text();

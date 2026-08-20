@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { invoke } from '@forge/bridge';
 import { C } from '../utils/colors';
+import { deriveAuthFailureView } from '../utils/authFailure';
 
 interface Notebook {
   id: string;
@@ -118,6 +119,10 @@ const TreeRow: React.FC<{
 interface AuthStatus {
   authenticated: boolean;
   error?: string;
+  // Vom Resolver klassifizierter Microsoft-Anmeldefehler (siehe resolvers/onenote/authErrors.ts)
+  errorKind?: string;
+  errorCode?: string;
+  errorOwner?: 'vendor' | 'tenant-admin' | 'unknown';
   user?: { displayName?: string; mail?: string };
 }
 
@@ -267,40 +272,69 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
 
   // Auth not connected
   if (authStatus && !authStatus.authenticated) {
+    const { isFailure, canRetry, headline } = deriveAuthFailureView(authStatus);
+    const failure = isFailure ? authStatus : null;
+
     return (
       <div style={{
-        border: `1px solid ${C.N40}`,
+        border: `1px solid ${failure ? C.R400 : C.N40}`,
         borderRadius: 8,
         overflow: 'hidden',
         boxShadow: '0 1px 3px rgba(9, 30, 66, 0.08)',
       }}>
         <SectionHeader>OneNote</SectionHeader>
         <div style={{ padding: '24px 16px', textAlign: 'center' }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>🔗</div>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>{failure ? '⚠️' : '🔗'}</div>
           <div style={{ fontSize: 14, color: C.N800, fontWeight: 500, marginBottom: 4 }}>
-            Connect Microsoft Account
+            {headline}
           </div>
-          <div style={{ fontSize: 12, color: C.N200, marginBottom: 16 }}>
-            Connect your Microsoft account to access OneNote notebooks.
-          </div>
-          {authStatus.error && (
-            <div style={{ fontSize: 12, color: C.R400, marginBottom: 12 }}>{authStatus.error}</div>
-          )}
-          <button
-            onClick={connectAccount}
-            style={{
-              padding: '8px 20px',
-              fontSize: 14,
-              fontWeight: 500,
-              color: '#fff',
-              backgroundColor: C.B400,
-              border: 'none',
+          {failure ? (
+            <div style={{
+              fontSize: 12,
+              color: C.N800,
+              backgroundColor: C.R75,
+              border: `1px solid ${C.R400}`,
               borderRadius: 4,
-              cursor: 'pointer',
-            }}
-          >
-            Connect Microsoft Account
-          </button>
+              padding: '10px 12px',
+              margin: '0 auto 12px',
+              maxWidth: 460,
+              textAlign: 'left',
+              lineHeight: 1.5,
+            }}>
+              {failure.error}
+              {failure.errorCode && (
+                <div style={{ fontSize: 11, color: C.N200, marginTop: 6 }}>
+                  Reference: {failure.errorCode}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: 12, color: C.N200, marginBottom: 16 }}>
+                Connect your Microsoft account to access OneNote notebooks.
+              </div>
+              {authStatus.error && (
+                <div style={{ fontSize: 12, color: C.R400, marginBottom: 12 }}>{authStatus.error}</div>
+              )}
+            </>
+          )}
+          {canRetry && (
+            <button
+              onClick={connectAccount}
+              style={{
+                padding: '8px 20px',
+                fontSize: 14,
+                fontWeight: 500,
+                color: '#fff',
+                backgroundColor: C.B400,
+                border: 'none',
+                borderRadius: 4,
+                cursor: 'pointer',
+              }}
+            >
+              Connect Microsoft Account
+            </button>
+          )}
         </div>
       </div>
     );

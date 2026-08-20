@@ -133,3 +133,90 @@ describe('requestMicrosoftGraph', () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 });
+
+describe('AADSTS-Fehlerbehandlung', () => {
+  // Originaltext aus dem Produktionsausfall vom 19.08.2026
+  const AADSTS_BODY =
+    '{"error":"invalid_client","error_description":"AADSTS7000215: Invalid client secret provided. ' +
+    "Ensure the secret being sent in the request is the client secret value, not the client secret ID, " +
+    "for a secret added to app '724d3f03-aef2-46c3-986e-9a92245b1bdb'.\"}";
+
+  let errorSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    mockHasCredentials.mockReset();
+    mockFetch.mockReset();
+    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    errorSpy.mockRestore();
+  });
+
+  it('checkAuthStatus liefert eine verständliche Meldung statt eines rohen 401', async () => {
+    mockHasCredentials.mockResolvedValue(true);
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({}),
+      text: async () => AADSTS_BODY,
+    });
+
+    const result = await checkAuthStatus();
+
+    expect(result.authenticated).toBe(false);
+    expect(result.errorKind).toBe('invalid-client-secret');
+    expect(result.errorCode).toBe('AADSTS7000215');
+    expect(result.errorOwner).toBe('vendor');
+    expect(result.error).toContain('PageFlow support');
+    expect(result.error).not.toContain('724d3f03');
+  });
+
+  it('checkAuthStatus schreibt eine Log-Zeile mit stabilem Präfix für die Alert-Regel', async () => {
+    mockHasCredentials.mockResolvedValue(true);
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({}),
+      text: async () => AADSTS_BODY,
+    });
+
+    await checkAuthStatus();
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[PageFlow][onenote-auth] kind=invalid-client-secret code=AADSTS7000215 owner=vendor context=auth-status'
+    );
+  });
+
+  it('loggt nicht bei gewöhnlichen Fehlern ohne AADSTS-Code', async () => {
+    mockHasCredentials.mockResolvedValue(true);
+    mockFetch.mockRejectedValue(new Error('Network failure'));
+
+    const result = await checkAuthStatus();
+
+    expect(result).toEqual({ authenticated: false, error: 'Network failure' });
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it('requestMicrosoftGraph wirft MsGraphError mit klassifizierter Meldung', async () => {
+    mockHasCredentials.mockResolvedValue(true);
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({}),
+      text: async () => AADSTS_BODY,
+    });
+
+    try {
+      await requestMicrosoftGraph('/v1.0/me/onenote/notebooks');
+      throw new Error('sollte werfen');
+    } catch (err) {
+      const msErr = err as MsGraphError;
+      expect(msErr).toBeInstanceOf(MsGraphError);
+      expect(msErr.authError?.kind).toBe('invalid-client-secret');
+      expect(msErr.message).toContain('AADSTS7000215');
+      expect(msErr.message).toContain('PageFlow support');
+      expect(msErr.message).not.toContain('724d3f03');
+    }
+  });
+});
