@@ -234,6 +234,16 @@ bd sync                         # Git-Sync
 - **NICHT**: Secrets/Credentials im Code
 - **RICHTIG**: Environment-Variablen via `forge variables`
 
+### Externe Integrationen: kein Release ohne Prod-Beweis
+
+Gelernt aus dem OneNote-OAuth-Ausfall (Aug 2026): Die Integration lief in Development, in Production war nie ein Client Secret gesetzt. Der erste echte Test war ein zahlender Marketplace-Kunde.
+
+- `forge providers` kennt **nur** `configure` — kein `list`, kein `status`. Ob ein Secret in einem Environment gesetzt ist, laesst sich **nicht auslesen**. Der End-to-End-Test ist der einzige Beweis.
+- Development beweist nichts fuer Production: Secrets, Installationen und Provider-Config sind pro Environment getrennt.
+- Eine externe Integration gilt erst als fertig, wenn der Flow **in Production gegen ein echtes Fremdsystem** durchlaufen wurde. Nicht Unit-Tests, nicht Dev.
+- Ist der Test nicht durchfuehrbar (fehlendes Konto, fehlender Tenant), lautet die Meldung **"ungetestet in Production, nicht releasen"** — niemals "fertig".
+- Betriebswissen zu externen Providern (Tenant-Besitzer, App-IDs, Secret-Ablaufdaten) gehoert ins Repo unter `docs/runbooks/`, nicht nur ins Session-Memory. Beim Projekt-Rename ging genau diese Information verloren.
+
 ### Credentials im Chat (ZERO TOLERANCE)
 
 - **NIEMALS** Credentials/API Keys/Passwörter/Tokens in Chat-Antworten ausgeben
