@@ -22,7 +22,7 @@ Rekonstruiert aus dem Memory des Vorgaengerprojekts *ConfluenceImporter* (Stand 
 **Zwei getrennte Baustellen:**
 
 1. **Production-Secret.** Der dokumentierte Deploy-Workflow des Vorgaengerprojekts verwendete ausschliesslich `-e development`. Fuer Production ist keine Provider-Konfiguration dokumentiert. Das passt zum Fehlerbild beim Kunden: In Production ist kein gueltiges Secret hinterlegt, waehrend Development funktionierte.
-2. **Ablauf am 27.08.2026.** Unabhaengig vom Punkt oben faellt der OneNote-Import an diesem Datum in **allen** Environments aus. Ein neues Secret loest beide Probleme in einem Durchgang.
+2. **Ablauf des Secrets.** Unabhaengig vom Punkt oben faellt der OneNote-Import zum Ablaufdatum aus der Tabelle oben in **allen** Environments aus. Ein neues Secret loest beide Probleme in einem Durchgang. Das Ablaufdatum wird ausschliesslich in dieser Tabelle gepflegt — steht es an zwei Stellen, ist eine davon irgendwann falsch.
 
 **Nicht gegen einen Business-Tenant getestet.** Die Registrierung wurde fuer persoenliche Microsoft-Konten konfiguriert (`Notes.Read` statt `Notes.Read.All`, Personal-Account-ID-Format). Delegiertes `Notes.Read` funktioniert grundsaetzlich auch in Org-Tenants, aber der Pfad ist unerprobt. Nach dem Secret-Fix ist der Kundenfall gezielt nachzustellen, statt ihn als erledigt zu betrachten.
 
@@ -74,6 +74,8 @@ Alle Fehler erscheinen dem Kunden als `could not retrieve access token from the 
 | `AADSTS50020` | User aus fremdem Tenant, App nicht für Multi-Tenant freigegeben | Vendor |
 | `AADSTS65001` | Kein Admin-Consent im Kunden-Tenant erteilt | Kunde (M365-Admin) |
 | `AADSTS50011` | Redirect-URI stimmt nicht mit Azure-Registrierung überein | Vendor |
+
+Seit `src/resolvers/onenote/authErrors.ts` klassifiziert die App diese Codes selbst: der Kunde sieht Klartext statt eines rohen 401, und in den Forge-App-Logs erscheint eine Zeile der Form `[PageFlow][onenote-auth] kind=... code=AADSTS... owner=...`. Dieses Praefix ist der Anker der Alert-Regel (Abschnitt 7) und darf sich nicht aendern.
 
 Merksatz: **7000215 heißt, Azure hat ein Secret bekommen und es war falsch.** Wäre gar keins gesetzt, käme ein anderer Fehler. Der Fehler beweist also, dass die Provider-Config existiert, aber falsche Daten enthält.
 
@@ -136,26 +138,109 @@ Diese Punkte sind nur einmal zu prüfen, aber jeder einzelne bricht die Integrat
 
 ---
 
-## 5. Rotation (planmäßig, vor Ablauf)
+## 5. Rotation ohne Ausfall
 
-Azure-Secrets laufen maximal nach 24 Monaten ab. Der Ablauf ist ein garantierter Totalausfall zu einem vorhersehbaren Zeitpunkt — er gehört terminiert, nicht abgewartet.
+Azure-Secrets laufen **maximal nach 24 Monaten** ab; "laeuft nie ab" gibt es seit Jahren nicht mehr. Der Ablauf ist ein garantierter Totalausfall zu einem **vorhersehbaren** Zeitpunkt. Er gehoert terminiert, nicht abgewartet.
 
-**Erinnerung 30 Tage vor Ablauf setzen.** Ablauf: neues Secret anlegen (das alte bleibt parallel gültig), Schritte 3.1–3.3 ausführen, danach das alte Secret in Azure löschen. Kein Redeploy nötig, kein Downtime-Fenster, Kunden müssen sich nicht neu authentifizieren — bestehende Refresh-Tokens bleiben gültig.
+**Microsoft warnt nicht.** Ablaufmails verschickt Entra nur fuer SAML-Zertifikate (60/30/7 Tage), **nicht** fuer Client Secrets. Der Kalendereintrag ist die einzige Warnung, die existiert.
 
-**Ausnahme:** Wird die **Client ID** gewechselt, ändert sich das `manifest.yml`. Das erzwingt ein `forge deploy` und einen Major-Version-Upgrade beim Kunden. Zwischen Deploy und `forge providers configure` existiert ein Fenster, in dem Kunden auf der neuen Version **kein** Secret haben. Beide Schritte deshalb unmittelbar nacheinander ausführen.
+### 5.1 Ablauf (null Downtime)
+
+Azure erlaubt mehrere Secrets parallel. Genau das macht die Rotation unterbrechungsfrei — das neue wird gesetzt, bevor das alte verschwindet.
+
+1. Neues Secret in Azure anlegen, Laufzeit 24 Monate. **Altes Secret stehen lassen.**
+2. `forge providers configure microsoft-graph -e production`
+3. `forge providers configure microsoft-graph -e staging`
+4. `forge providers configure microsoft-graph -e development`
+5. Prod-Flow real durchlaufen (Abschnitt 3.3). Erst dieser Test beweist, dass das neue Secret wirkt.
+6. **Erst jetzt** das alte Secret in Azure loeschen.
+7. Neues Ablaufdatum in der Tabelle in Abschnitt 0 eintragen, Termine aus 5.3 neu setzen.
+
+Kein Redeploy, kein Downtime-Fenster, keine erneute Anmeldung der Kunden — die `clientId` bleibt unveraendert und bestehende Refresh-Tokens gelten weiter.
+
+### 5.2 Harte Grenze: zwei Secrets
+
+Apps, die **persoenliche Microsoft-Konten** unterstuetzen — wie diese hier —, duerfen nur **zwei** Client Secrets gleichzeitig haben. Fuer die Ueberlappung reicht das exakt. Es bedeutet aber: ein vergessenes altes Secret blockiert die naechste Rotation. Schritt 6 ist deshalb nicht optional.
+
+### 5.3 Termine
+
+| Zeitpunkt | Handlung |
+|---|---|
+| T-60 Tage | Rotation planen, Kontozugang pruefen (Abschnitt 6) |
+| T-14 Tage | Rotation durchfuehren (5.1) |
+
+Beide Termine verweisen auf dieses Dokument.
+
+### 5.4 Ausnahme: Wechsel der Client ID
+
+Wird die **Client ID** gewechselt, aendert sich `manifest.yml`. Das erzwingt ein `forge deploy` und einen Major-Version-Upgrade beim Kunden. Zwischen Deploy und `forge providers configure` existiert ein Fenster, in dem Kunden auf der neuen Version **kein** Secret haben. Beide Schritte unmittelbar nacheinander ausfuehren.
 
 ---
 
-## 6. Bekannte Grenze dieses Modells
+## 6. Kontozugang und Bus-Faktor
+
+Die App-Registrierung liegt im Standardverzeichnis eines **persoenlichen Microsoft-Kontos**. Damit haengt die OneNote-Funktion **aller** Marketplace-Installationen an genau einem Konto.
+
+### 6.1 Warum ein Umzug das nicht loest
+
+App-Registrierungen lassen sich **nicht** zwischen Tenants verschieben. Eine Neuanlage in einem anderen Verzeichnis erzeugt zwingend eine **neue Client ID** — und damit Manifest-Aenderung, Deploy, Major-Version-Upgrade und erneute Zustimmung jedes einzelnen Kunden. Der Umzug in ein sauberes Firmenverzeichnis ist also **kein Wartungsvorgang, sondern ein Breaking Change**.
+
+Konsequenz: Das Konto bleibt auf absehbare Zeit ein Single Point of Failure. Geht es verloren, ist die OneNote-Funktion nicht reparierbar.
+
+### 6.2 Was stattdessen abzusichern ist
+
+- [ ] Verantwortliches Konto ist benannt und im Passwortmanager hinterlegt
+- [ ] Recovery-Mail und Recovery-Telefon sind gesetzt und aktuell
+- [ ] MFA-Backup-Codes existieren und liegen ausserhalb des Kontos
+- [ ] Zweiter Owner ist auf der Registrierung eingetragen — oder die Entscheidung dagegen ist hier begruendet
+
+**Keine Zugangsdaten in dieses Dokument.** Es liegt im Repository. Hier steht, *wo* der Zugang liegt, nie *wie* er lautet.
+
+---
+
+## 7. Monitoring
+
+Bis zum Ausfall im August 2026 war der zahlende Kunde das Monitoring. Zwei Ebenen ersetzen das — mit unterschiedlichen Staerken.
+
+### 7.1 Forge-Alerts (plattform-nativ, reaktiv)
+
+Die Developer Console bietet Metrics, Logs und Alert-Regeln mit Respondern. Eine Regel auf Invocation-Errors der OneNote-Funktion greift auf die Log-Zeile aus Abschnitt 2.
+
+**Grenze:** reaktiv. Der Alert feuert erst, wenn ein Nutzer bereits auf den Fehler gelaufen ist.
+
+### 7.2 Externe Probe (proaktiv)
+
+Ein taeglicher Job ausserhalb von Forge ruft den Microsoft-Token-Endpoint mit `client_id` und Secret sowie einem absichtlich ungueltigen `refresh_token` auf:
+
+- Antwort `invalid_grant` → Secret ist gueltig
+- Antwort `AADSTS7000215` / `AADSTS7000222` → Alarm
+
+**Grenzen:** Der Job prueft das Secret **in Azure**, nicht ob Forge Production es korrekt gespeichert hat — diese Luecke schliesst nur der E2E-Test aus 3.3. Ausserdem existiert das Secret dadurch an einem zweiten Ort. Vor dem Bau ist zu verifizieren, dass Entra die Client-Authentifizierung tatsaechlich **vor** dem Grant prueft; andernfalls traegt der Ansatz nicht.
+
+### 7.3 Warum Forge das nicht selbst kann
+
+- `forge providers` kennt nur `configure` — kein `list`, kein `status`. Der Konfigurationszustand ist **nicht auslesbar**.
+- Ein Forge Scheduled Trigger laeuft ohne Nutzerkontext und hat damit kein Token, das er pruefen koennte.
+
+Deshalb bleibt der End-to-End-Test in Production der einzige echte Beweis.
+
+---
+
+## 8. Bekannte Grenze dieses Modells
 
 Das Vendor-Secret ist ein Single Point of Failure für alle Kunden gleichzeitig, und Kunden mit eigenen Compliance-Anforderungen können weder eigene Azure-App noch eigene Conditional-Access-Policies einbringen. Das ist eine Eigenschaft von Forge External Auth, kein Konfigurationsfehler. Ein Wechsel auf kundeneigene Credentials erfordert, den Forge-Provider-Mechanismus zu verlassen und den OAuth-Flow selbst zu implementieren.
 
 ---
 
-## 7. Referenzen
+## 9. Referenzen
 
 - [Providers — Manifest-Referenz](https://developer.atlassian.com/platform/forge/manifest-reference/providers/)
 - [Command: providers configure](https://developer.atlassian.com/platform/forge/cli-reference/providers-configure/)
 - [Rotating an OAuth 2.0 client ID and secret](https://developer.atlassian.com/platform/forge/rotating-an-oauth-2.0-client-id-and-secret/)
 - [Common issues with external authentication](https://developer.atlassian.com/platform/forge/common-issues-with-external-authentication/)
 - [Microsoft: AADSTS-Fehlercodes](https://learn.microsoft.com/en-us/entra/identity-platform/reference-error-codes)
+- [Forge: Alerts](https://developer.atlassian.com/platform/forge/alerts/)
+- [Forge: Monitor invocation metrics](https://developer.atlassian.com/platform/forge/monitor-invocation-metrics/)
+- [Microsoft: Ablaufmails nur fuer SAML-Zertifikate](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/application-management-certs-faq)
+- [Microsoft: Maximale Anzahl Client Secrets](https://learn.microsoft.com/en-au/answers/questions/5655092/clarification-on-maximum-allowed-client-secrets-fo)
+- [Microsoft: App-Registrierungen sind nicht zwischen Tenants verschiebbar](https://learn.microsoft.com/en-us/answers/questions/2259370/can-we-migrate-applications-under-app-registration)
