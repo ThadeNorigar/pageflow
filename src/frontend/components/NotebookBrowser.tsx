@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { invoke } from '@forge/bridge';
 import { C } from '../utils/colors';
 import { deriveAuthFailureView } from '../utils/authFailure';
+import { TabId } from '../utils/tabs';
 
 interface Notebook {
   id: string;
@@ -26,6 +27,8 @@ export interface OneNoteSelection {
 
 interface NotebookBrowserProps {
   onSelectionChange: (selection: OneNoteSelection) => void;
+  /** Erlaubt es, bei einem Auth-Ausfall auf den OAuth-freien Import zu wechseln */
+  onSwitchTab?: (tab: TabId) => void;
 }
 
 const Spinner: React.FC<{ inline?: boolean }> = ({ inline }) => (
@@ -126,7 +129,7 @@ interface AuthStatus {
   user?: { displayName?: string; mail?: string };
 }
 
-const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) => {
+const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange, onSwitchTab }) => {
   const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [sectionsCache, setSectionsCache] = useState<Map<string, Section[]>>(new Map());
@@ -334,6 +337,39 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange }) 
             >
               Connect Microsoft Account
             </button>
+          )}
+          {failure && onSwitchTab && (
+            <div style={{
+              marginTop: 16,
+              paddingTop: 16,
+              borderTop: `1px solid ${C.N40}`,
+              fontSize: 12,
+              color: C.N200,
+              lineHeight: 1.5,
+              textAlign: 'left',
+              maxWidth: 460,
+              margin: '16px auto 0',
+            }}>
+              You can still import OneNote content without a Microsoft connection: export your
+              notebook from OneNote Desktop and upload the exported folder.
+              <div style={{ marginTop: 10 }}>
+                <button
+                  onClick={() => onSwitchTab('local-onenote')}
+                  style={{
+                    padding: '6px 14px',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: C.B400,
+                    backgroundColor: 'transparent',
+                    border: `1px solid ${C.B400}`,
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Go to Local OneNote import
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>

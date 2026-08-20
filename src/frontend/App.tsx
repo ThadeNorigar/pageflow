@@ -56,7 +56,7 @@ const App: React.FC = () => {
     if (activeTab === 'onenote-import') {
       return (
         <>
-          <NotebookBrowser onSelectionChange={handleOneNoteChange} />
+          <NotebookBrowser onSelectionChange={handleOneNoteChange} onSwitchTab={setActiveTab} />
           {oneNoteSelection.pages.length > 0 && (
             <div style={{
               marginTop: 12,
