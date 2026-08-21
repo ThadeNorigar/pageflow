@@ -1,6 +1,6 @@
 {
   "name": "pageflow",
-  "version": "2.1.0",
+  "version": "2.9.0",
   "private": false,
   "description": "Atlassian Forge app for content import/export with Confluence",
   "scripts": {

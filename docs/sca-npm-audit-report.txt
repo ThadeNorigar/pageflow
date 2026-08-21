@@ -1,50 +1,33 @@
-# SCA Report (npm audit) — generiert 2026-06-12T20:01:05Z
-# Kommando: npm audit (Root) + npm audit (src/frontend)
+# SCA Report (npm audit) — generiert 2026-08-21T16:17:17Z
+# Kommando: npm audit --omit=dev (Produktion) + npm audit (alle Dependencies)
 
-## Root — alle Dependencies:
-# npm audit report
+## Produktions-Dependencies (was beim Kunden landet):
+  found 0 vulnerabilities
 
-uuid  <11.1.1
-Severity: moderate
-uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided - https://github.com/advisories/GHSA-w5hq-g745-h8pq
-fix available via `npm audit fix --force`
-Will install webpack-dev-server@1.16.5, which is a breaking change
-node_modules/uuid
-  sockjs  >=0.3.17
-  Depends on vulnerable versions of uuid
-  node_modules/sockjs
-    webpack-dev-server  >=2.0.0-beta
-    Depends on vulnerable versions of sockjs
-    node_modules/webpack-dev-server
+## Alle Dependencies inkl. Build- und Testwerkzeug:
+  node_modules/uuid
+    sockjs  >=0.3.17
+    Depends on vulnerable versions of uuid
+    node_modules/sockjs
+      webpack-dev-server  <=5.2.6
+      Depends on vulnerable versions of sockjs
+      node_modules/webpack-dev-server
+  
+  
+  websocket-driver  <=0.7.4
+  Severity: critical
+  websocket-driver: Resource limit bypass via message compression - https://github.com/advisories/GHSA-mp7j-qc5w-4988
+  websocket-driver: Message corruption via abuse of protocol length headers - https://github.com/advisories/GHSA-xv26-6w52-cph6
+  fix available via `npm audit fix`
+  node_modules/websocket-driver
+  
+  13 vulnerabilities (2 low, 5 moderate, 5 high, 1 critical)
+  
+  To address all issues, run:
+    npm audit fix
 
-3 moderate severity vulnerabilities
-
-To address all issues (including breaking changes), run:
-  npm audit fix --force
-
-## Root — production only (--omit=dev):
-found 0 vulnerabilities
-
-## src/frontend — alle Dependencies:
-# npm audit report
-
-uuid  <11.1.1
-Severity: moderate
-uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided - https://github.com/advisories/GHSA-w5hq-g745-h8pq
-fix available via `npm audit fix --force`
-Will install webpack-dev-server@1.16.5, which is a breaking change
-node_modules/uuid
-  sockjs  >=0.3.17
-  Depends on vulnerable versions of uuid
-  node_modules/sockjs
-    webpack-dev-server  >=2.0.0-beta
-    Depends on vulnerable versions of sockjs
-    node_modules/webpack-dev-server
-
-3 moderate severity vulnerabilities
-
-To address all issues (including breaking changes), run:
-  npm audit fix --force
-
-## src/frontend — production only:
-found 0 vulnerabilities
+## Hinweis
+  Die verbleibenden Findings betreffen ausschliesslich Dev-Abhaengigkeiten
+  (webpack-dev-server und dessen Baum). Sie werden nicht ausgeliefert und
+  laufen nur auf dem Entwicklungsrechner. Nachverfolgt in Bead
+  confluenceimporter-1jj.
