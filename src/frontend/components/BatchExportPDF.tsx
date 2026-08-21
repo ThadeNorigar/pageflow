@@ -4,6 +4,7 @@ import { C } from '../utils/colors';
 import ExportPageTree from './ExportPageTree';
 import { generatePdf, downloadPdf, ExportPage } from '../utils/pdfExport';
 import { buildDocx, docxToBlob, downloadDocx } from '../utils/docxExport';
+import { describeError } from '../utils/errorMessages';
 
 type ExportFormat = 'pdf' | 'word';
 
@@ -96,7 +97,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
         } catch (err) {
           failed.push({
             pageId: pageIds[i],
-            error: err instanceof Error ? err.message : 'Failed to load page',
+            error: describeError(err, 'Failed to load page'),
           });
         }
       }
@@ -133,7 +134,7 @@ const BatchExportPDF: React.FC<BatchExportPDFProps> = ({ spaceKey, spaceId }) =>
       setExportedCount(exportPages.length);
       setPhase('done');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Export failed');
+      setError(describeError(err, 'Export failed'));
       setPhase('done');
     }
   }, [spaceId, selectedIds, stationeryFile, format, reset]);

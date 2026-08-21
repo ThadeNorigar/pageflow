@@ -5,6 +5,15 @@ the release notes published on the Atlassian Marketplace.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **An expired session is now explained instead of dumped.** Leaving a tab open
+  for hours made the next import fail with `Token has expired: 1787330314 >
+  1787330251` — two raw timestamps and no way to act on them. PageFlow now says
+  the session expired and to reload the page. Applies to all four tabs.
+
 ## [2.9.0] — 2026-08-21
 
 Reliability release. The OneNote cloud import was broken for all installations

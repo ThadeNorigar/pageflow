@@ -5,6 +5,7 @@ import { C } from '../utils/colors';
 import { buildFolderTree, countFiles, totalSize, FolderNode } from '../utils/folderTree';
 import { validateFile, titleFromFilename } from '../utils/fileValidation';
 import { escapeXml } from '../utils/escapeXml';
+import { describeError } from '../utils/errorMessages';
 
 interface BatchImportPDFProps {
   selection: SpaceSelection | null;
@@ -108,7 +109,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
         importResults.push({
           name: `📁 ${node.name}`,
           status: 'error',
-          error: err instanceof Error ? err.message : 'Folder page failed',
+          error: describeError(err, 'Folder page failed'),
         });
         return;
       }
@@ -156,7 +157,7 @@ const BatchImportPDF: React.FC<BatchImportPDFProps> = ({ selection, spaceId }) =
           importResults.push({
             name: file.name,
             status: 'error',
-            error: err instanceof Error ? err.message : 'Upload failed',
+            error: describeError(err, 'Upload failed'),
           });
         }
         setProgress(p => ({ ...p, current: p.current + 1 }));

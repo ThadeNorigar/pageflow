@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { invoke } from '@forge/bridge';
 import { C } from '../utils/colors';
+import { describeError } from '../utils/errorMessages';
 
 interface ImportPage {
   id: string;
@@ -63,7 +64,7 @@ const ImportButton: React.FC<ImportButtonProps> = ({ pages, spaceId, parentId, d
           confluencePageId: '',
           title: page.title,
           status: 'error',
-          error: err instanceof Error ? err.message : 'Import failed',
+          error: describeError(err, 'Import failed'),
         });
       }
     }

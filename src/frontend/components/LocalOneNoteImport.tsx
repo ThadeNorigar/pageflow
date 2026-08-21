@@ -3,6 +3,7 @@ import { invoke } from '@forge/bridge';
 import { SpaceSelection } from '../types';
 import { C } from '../utils/colors';
 import { buildFolderTree, countFiles, totalSize, FolderNode } from '../utils/folderTree';
+import { describeError } from '../utils/errorMessages';
 
 interface LocalOneNoteImportProps {
   selection: SpaceSelection | null;
@@ -144,7 +145,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
         importResults.push({
           name: node.name,
           status: 'error',
-          error: err instanceof Error ? err.message : 'Folder page failed',
+          error: describeError(err, 'Folder page failed'),
         });
         return;
       }
@@ -190,7 +191,7 @@ const LocalOneNoteImport: React.FC<LocalOneNoteImportProps> = ({ selection, spac
           importResults.push({
             name: file.name,
             status: 'error',
-            error: err instanceof Error ? err.message : 'Import failed',
+            error: describeError(err, 'Import failed'),
           });
         }
         setProgress(p => ({ ...p, current: p.current + 1 }));
