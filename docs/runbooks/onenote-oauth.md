@@ -127,6 +127,18 @@ Ein Test in Development beweist für Production nichts, weil beide Environments 
 
 ---
 
+### 3.4 Verifikationsprotokoll
+
+| Datum | Environment | Ergebnis |
+|---|---|---|
+| 21.08.2026 | development | Secret rotiert, OAuth-Flow komplett durchlaufen, Notebook gelistet — OK |
+| 21.08.2026 | **production** | **Secret rotiert, OAuth-Flow komplett durchlaufen, Notebook gelistet, Abschnitt per Graph-API nachgeladen — OK** |
+| 21.08.2026 | staging | `Could not find either the container or service` — keine Installation vorhanden, bewusst uebersprungen |
+
+Damit ist der Ausfall aus Abschnitt 0 behoben. Der Flow wurde gegen ein **persoenliches** Microsoft-Konto verifiziert; der Business-Tenant-Pfad bleibt offen (siehe Abschnitt 0, letzter Absatz).
+
+---
+
 ## 4. Vorab-Checkliste der Azure-App-Registrierung
 
 Diese Punkte sind nur einmal zu prüfen, aber jeder einzelne bricht die Integration für **alle** Kunden. Sie sind bei einer nie gegen echtes M365 getesteten App die wahrscheinlichsten Folgefehler nach dem Secret.
@@ -150,12 +162,14 @@ Azure-Secrets laufen **maximal nach 24 Monaten** ab; "laeuft nie ab" gibt es sei
 Azure erlaubt mehrere Secrets parallel. Genau das macht die Rotation unterbrechungsfrei — das neue wird gesetzt, bevor das alte verschwindet.
 
 1. Neues Secret in Azure anlegen, Laufzeit 24 Monate. **Altes Secret stehen lassen.**
-2. `forge providers configure microsoft-graph -e production`
-3. `forge providers configure microsoft-graph -e staging`
-4. `forge providers configure microsoft-graph -e development`
-5. Prod-Flow real durchlaufen (Abschnitt 3.3). Erst dieser Test beweist, dass das neue Secret wirkt.
+2. `forge providers configure microsoft-graph -e development`
+3. Dev-Flow durchlaufen (Abschnitt 3.3) — billiger Vorabtest ohne Kundenrisiko.
+4. `forge providers configure microsoft-graph -e production`
+5. Prod-Flow real durchlaufen. Erst dieser Test beweist, dass das neue Secret wirkt.
 6. **Erst jetzt** das alte Secret in Azure loeschen.
 7. Neues Ablaufdatum in der Tabelle in Abschnitt 0 eintragen, Termine aus 5.3 neu setzen.
+
+**Staging wird bewusst uebersprungen.** Das Environment existiert (zuletzt deployed 24.02.2026, noch unter dem Vorgaengernamen), hat aber keine Installation. `forge providers configure -e staging` scheitert daher mit `Could not find either the container or service`. Das ist erwartbar, kein Fehler. Nur relevant, falls Staging jemals wieder in Betrieb geht.
 
 Kein Redeploy, kein Downtime-Fenster, keine erneute Anmeldung der Kunden — die `clientId` bleibt unveraendert und bestehende Refresh-Tokens gelten weiter.
 
