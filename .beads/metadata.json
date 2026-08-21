@@ -1,7 +1,7 @@
 {
   "database": "dolt",
   "backend": "dolt",
-  "dolt_mode": "embedded",
+  "dolt_mode": "server",
   "dolt_database": "pageflow",
-  "project_id": "420f7c0a-9fe5-4254-bd38-eaac16932995"
+  "project_id": "3cf08c87-3e9c-4674-b5db-98b6c82fb9e8"
 }

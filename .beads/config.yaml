@@ -65,4 +65,7 @@
 # - linear.api_key  → use LINEAR_API_KEY env var instead
 # - github.token    → use GITHUB_TOKEN env var instead
 
-sync.remote: "git+https://github.com/ThadeNorigar/pageflow.git"
+# ACHTUNG: Das GitHub-Repo ist oeffentlich. Beads enthalten interne Betriebsnotizen
+# (u. a. Kontozugaenge), die dort nicht hingehoeren. Neuere bd-Versionen setzen hier
+# per Default git+<origin> ein - das waere ein Leck. Sync bleibt beim privaten Dolt.
+sync.remote: "https://dolt.adrianphilipp.de/pageflow"
