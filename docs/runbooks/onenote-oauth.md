@@ -228,12 +228,22 @@ Die Developer Console bietet Metrics, Logs und Alert-Regeln mit Respondern. Eine
 
 ### 7.2 Externe Probe (proaktiv)
 
-Ein taeglicher Job ausserhalb von Forge ruft den Microsoft-Token-Endpoint mit `client_id` und Secret sowie einem absichtlich ungueltigen `refresh_token` auf:
+Umgesetzt als GitHub Action: `.github/workflows/onenote-secret-health.yml`, taeglich 06:00 UTC plus manuell ausloesbar.
 
-- Antwort `invalid_grant` → Secret ist gueltig
-- Antwort `AADSTS7000215` / `AADSTS7000222` → Alarm
+Der Job ruft den Microsoft-Token-Endpoint mit **`grant_type=client_credentials`** auf:
 
-**Grenzen:** Der Job prueft das Secret **in Azure**, nicht ob Forge Production es korrekt gespeichert hat — diese Luecke schliesst nur der E2E-Test aus 3.3. Ausserdem existiert das Secret dadurch an einem zweiten Ort. Vor dem Bau ist zu verifizieren, dass Entra die Client-Authentifizierung tatsaechlich **vor** dem Grant prueft; andernfalls traegt der Ansatz nicht.
+- Antwort `AADSTS7000215` → Secret ungueltig → **Alarm**
+- Antwort `AADSTS7000222` → Secret abgelaufen → **Alarm**
+- Antwort `AADSTS700016` → App-Registrierung weg → **Alarm**
+- alles andere → Secret ist in Ordnung
+
+Die App hat keine Application Permissions, ein *Erfolg* ist also gar nicht zu erwarten. Entscheidend ist allein, **welcher** Fehler kommt.
+
+**Wichtig — der naheliegende Ansatz funktioniert nicht.** Ein absichtlich ungueltiger `refresh_token` taugt nicht als Probe: Entra weist den kaputten Grant mit `AADSTS9002313` zurueck, **bevor** es das Secret prueft. Damit liesse sich "Secret gueltig" nicht von "Secret kaputt" unterscheiden. Beides am 21.08.2026 gegen den echten Endpoint verifiziert.
+
+**Voraussetzung:** Repository-Secret `MS_GRAPH_CLIENT_SECRET`. Fehlt es, scheitert der Job absichtlich laut, statt still gruen zu sein.
+
+**Grenzen:** Der Job prueft das Secret **in Azure**, nicht ob Forge Production es korrekt gespeichert hat — diese Luecke schliesst nur der E2E-Test aus 3.3. Ausserdem existiert das Secret dadurch an einem zweiten Ort (GitHub).
 
 ### 7.3 Warum Forge das nicht selbst kann
 
