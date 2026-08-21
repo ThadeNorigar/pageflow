@@ -17,6 +17,7 @@ Rekonstruiert aus dem Memory des Vorgaengerprojekts *ConfluenceImporter* (Stand 
 | Kontotypen | Multi-Tenant (common endpoint) — dokumentiert als korrekt |
 | Redirect URIs | `.../outboundAuth/finish` und `.../outboundAuth/forge/callback` — dokumentiert als gesetzt |
 | Berechtigungen | `User.Read`, `Notes.Read` (delegiert) |
+| Verantwortliches Konto | Persoenliches Microsoft-Konto von Adrian Philipp. **Adresse steht bewusst nicht hier** — dieses Repository ist oeffentlich. Sie liegt im Passwortmanager und im Bead `confluenceimporter-o16`. |
 | **Client Secret gueltig bis** | **27.08.2026** |
 
 **Zwei getrennte Baustellen:**
@@ -189,7 +190,7 @@ Konsequenz: Das Konto bleibt auf absehbare Zeit ein Single Point of Failure. Geh
 
 ### 6.2 Was stattdessen abzusichern ist
 
-- [ ] Verantwortliches Konto ist benannt und im Passwortmanager hinterlegt
+- [x] Verantwortliches Konto ist benannt und im Passwortmanager hinterlegt (identifiziert am 21.08.2026; Adresse nur im Passwortmanager und in der Beads-DB, **nicht** in diesem oeffentlichen Repository)
 - [ ] Recovery-Mail und Recovery-Telefon sind gesetzt und aktuell
 - [ ] MFA-Backup-Codes existieren und liegen ausserhalb des Kontos
 - [ ] Zweiter Owner ist auf der Registrierung eingetragen — oder die Entscheidung dagegen ist hier begruendet
