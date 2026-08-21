@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { invoke } from '@forge/bridge';
 import { C } from '../utils/colors';
 import { deriveAuthFailureView } from '../utils/authFailure';
+import { markConnectAttempt, clearConnectAttempt, hasRecentConnectAttempt } from '../utils/connectAttempt';
 import { TabId } from '../utils/tabs';
 
 interface Notebook {
@@ -139,6 +140,7 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange, on
   const [selectedPageIds, setSelectedPageIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [attemptFailed, setAttemptFailed] = useState(false);
 
   // Check auth on mount
   useEffect(() => {
@@ -146,7 +148,13 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange, on
       .then(status => {
         setAuthStatus(status);
         if (status.authenticated) {
+          clearConnectAttempt();
           loadNotebooks();
+        } else if (hasRecentConnectAttempt(Date.now())) {
+          // Der Nutzer hat verbunden geklickt und kommt unverbunden zurueck.
+          // Forge hat den eigentlichen Fehler in seiner eigenen Oberflaeche
+          // abgefangen; wir wissen nur, dass es nicht geklappt hat.
+          setAttemptFailed(true);
         }
       })
       .catch(err => setAuthStatus({ authenticated: false, error: err.message }));
@@ -167,12 +175,20 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange, on
   }, []);
 
   const connectAccount = useCallback(async () => {
+    // MUSS vor requestAuth passieren: Forge ersetzt danach die gesamte Oberflaeche
+    // durch seine Consent-UI, wodurch diese Komponente unmountet. Nach der Rueckkehr
+    // ist dieser Eintrag der einzige Hinweis, dass ein Versuch stattgefunden hat.
+    markConnectAttempt(Date.now());
+    setAttemptFailed(false);
     try {
       await invoke('requestAuth');
       const status = await invoke<AuthStatus>('checkAuthStatus');
       setAuthStatus(status);
       if (status.authenticated) {
+        clearConnectAttempt();
         loadNotebooks();
+      } else {
+        setAttemptFailed(true);
       }
     } catch {
       // requestCredentials() throws a platform exception that Forge handles
@@ -275,19 +291,19 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange, on
 
   // Auth not connected
   if (authStatus && !authStatus.authenticated) {
-    const { isFailure, canRetry, headline } = deriveAuthFailureView(authStatus);
-    const failure = isFailure ? authStatus : null;
+    const { state, isFailure, canRetry, headline } = deriveAuthFailureView(authStatus, attemptFailed);
+    const failure = state === 'classified' ? authStatus : null;
 
     return (
       <div style={{
-        border: `1px solid ${failure ? C.R400 : C.N40}`,
+        border: `1px solid ${isFailure ? C.R400 : C.N40}`,
         borderRadius: 8,
         overflow: 'hidden',
         boxShadow: '0 1px 3px rgba(9, 30, 66, 0.08)',
       }}>
         <SectionHeader>OneNote</SectionHeader>
         <div style={{ padding: '24px 16px', textAlign: 'center' }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>{failure ? '⚠️' : '🔗'}</div>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>{isFailure ? '⚠️' : '🔗'}</div>
           <div style={{ fontSize: 14, color: C.N800, fontWeight: 500, marginBottom: 4 }}>
             {headline}
           </div>
@@ -310,6 +326,32 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange, on
                   Reference: {failure.errorCode}
                 </div>
               )}
+            </div>
+          ) : state === 'attempt-failed' ? (
+            <div style={{
+              fontSize: 12,
+              color: C.N800,
+              backgroundColor: C.R75,
+              border: `1px solid ${C.R400}`,
+              borderRadius: 4,
+              padding: '10px 12px',
+              margin: '0 auto 12px',
+              maxWidth: 460,
+              textAlign: 'left',
+              lineHeight: 1.5,
+            }}>
+              The connection to Microsoft did not complete. Microsoft did not tell PageFlow why,
+              so this is what to check — in this order:
+              <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+                <li style={{ marginBottom: 4 }}>
+                  Your organisation may not have approved OneNote access for PageFlow yet. Your
+                  Microsoft 365 administrator can confirm this.
+                </li>
+                <li>
+                  If your administrator sees no pending approval, the Microsoft connection may be
+                  misconfigured on the app vendor&apos;s side. Contact PageFlow support.
+                </li>
+              </ul>
             </div>
           ) : (
             <>
@@ -335,10 +377,10 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange, on
                 cursor: 'pointer',
               }}
             >
-              Connect Microsoft Account
+              {state === 'attempt-failed' ? 'Try connecting again' : 'Connect Microsoft Account'}
             </button>
           )}
-          {failure && onSwitchTab && (
+          {isFailure && onSwitchTab && (
             <div style={{
               marginTop: 16,
               paddingTop: 16,

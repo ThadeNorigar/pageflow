@@ -128,3 +128,67 @@ describe('NotebookBrowser im Normalfall ohne Verbindung', () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe('NotebookBrowser nach fehlgeschlagenem Verbindungsversuch', () => {
+  const ATTEMPT_KEY = 'pageflow.onenote.connectAttempt';
+
+  beforeEach(() => {
+    mockInvoke.mockReset();
+    window.sessionStorage.clear();
+    mockAuthStatus({ authenticated: false });
+    // Simuliert: Nutzer hat Connect geklickt, Forge hat uebernommen, er kommt
+    // unverbunden zurueck und die Komponente wird neu gemountet
+    window.sessionStorage.setItem(ATTEMPT_KEY, String(Date.now()));
+  });
+
+  afterEach(() => {
+    window.sessionStorage.clear();
+  });
+
+  it('zeigt einen Hinweis statt der unveraenderten Einladung', async () => {
+    render(<NotebookBrowser onSelectionChange={jest.fn()} onSwitchTab={jest.fn()} />);
+
+    expect(await screen.findByText('Connection was not completed')).toBeInTheDocument();
+    expect(
+      screen.queryByText('Connect your Microsoft account to access OneNote notebooks.')
+    ).not.toBeInTheDocument();
+  });
+
+  it('nennt beide moeglichen Ursachen, ohne einen Fehlercode zu erfinden', async () => {
+    render(<NotebookBrowser onSelectionChange={jest.fn()} onSwitchTab={jest.fn()} />);
+
+    await screen.findByText('Connection was not completed');
+    expect(screen.getByText(/Microsoft 365 administrator/)).toBeInTheDocument();
+    expect(screen.getByText(/PageFlow support/)).toBeInTheDocument();
+    expect(screen.queryByText(/AADSTS/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Reference:/)).not.toBeInTheDocument();
+  });
+
+  it('verweist auf den lokalen OneNote-Import als Ausweg', async () => {
+    const onSwitchTab = jest.fn();
+    render(<NotebookBrowser onSelectionChange={jest.fn()} onSwitchTab={onSwitchTab} />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Go to Local OneNote import' }));
+
+    expect(onSwitchTab).toHaveBeenCalledWith('local-onenote');
+  });
+
+  it('sperrt den Nutzer nicht aus — ein erneuter Versuch bleibt moeglich', async () => {
+    render(<NotebookBrowser onSelectionChange={jest.fn()} onSwitchTab={jest.fn()} />);
+
+    expect(
+      await screen.findByRole('button', { name: 'Try connecting again' })
+    ).toBeInTheDocument();
+  });
+
+  it('zeigt keinen Hinweis, wenn der Versuch veraltet ist', async () => {
+    window.sessionStorage.setItem(ATTEMPT_KEY, String(Date.now() - 11 * 60 * 1000));
+
+    render(<NotebookBrowser onSelectionChange={jest.fn()} onSwitchTab={jest.fn()} />);
+
+    expect(
+      await screen.findByText('Connect your Microsoft account to access OneNote notebooks.')
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Connection was not completed')).not.toBeInTheDocument();
+  });
+});
