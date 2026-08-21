@@ -1,4 +1,9 @@
-import { checkAuthStatus, requestMicrosoftGraph, MsGraphError } from '../../../src/resolvers/onenote/auth';
+import {
+  checkAuthStatus,
+  requestAuth,
+  requestMicrosoftGraph,
+  MsGraphError,
+} from '../../../src/resolvers/onenote/auth';
 
 const mockHasCredentials = jest.fn();
 const mockRequestCredentials = jest.fn();
@@ -9,8 +14,8 @@ jest.mock('@forge/api', () => ({
   default: {
     asUser: () => ({
       withProvider: () => ({
-        hasCredentials: () => mockHasCredentials(),
-        requestCredentials: () => mockRequestCredentials(),
+        hasCredentials: (...args: unknown[]) => mockHasCredentials(...args),
+        requestCredentials: (...args: unknown[]) => mockRequestCredentials(...args),
         fetch: (...args: unknown[]) => mockFetch(...args),
       }),
     }),
@@ -218,5 +223,39 @@ describe('AADSTS-Fehlerbehandlung', () => {
       expect(msErr.message).toContain('PageFlow support');
       expect(msErr.message).not.toContain('724d3f03');
     }
+  });
+});
+
+describe('Scope-Pruefung bei bestehenden Verbindungen', () => {
+  beforeEach(() => {
+    mockHasCredentials.mockReset();
+    mockRequestCredentials.mockReset();
+    mockFetch.mockReset();
+  });
+
+  it('fragt hasCredentials mit Notes.Read.All, damit alte Tokens nicht als verbunden gelten', async () => {
+    mockHasCredentials.mockResolvedValue(false);
+
+    await checkAuthStatus();
+
+    expect(mockHasCredentials).toHaveBeenCalledWith(['Notes.Read.All']);
+  });
+
+  it('meldet eine Verbindung ohne Notes.Read.All als nicht authentifiziert', async () => {
+    // Genau der Fall des Euronet-Kunden: gespeicherter Token traegt nur Notes.Read.
+    mockHasCredentials.mockResolvedValue(false);
+
+    const status = await checkAuthStatus();
+
+    expect(status.authenticated).toBe(false);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('fordert den breiteren Scope an, statt nur die alte Zustimmung zu erneuern', async () => {
+    mockRequestCredentials.mockResolvedValue(true);
+
+    await requestAuth();
+
+    expect(mockRequestCredentials).toHaveBeenCalledWith(['Notes.Read.All']);
   });
 });

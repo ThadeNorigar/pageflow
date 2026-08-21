@@ -31,6 +31,15 @@ export interface AuthStatus {
   errorOwner?: AuthErrorOwner;
 }
 
+/**
+ * Ohne Argument meldet hasCredentials() jeden gespeicherten Token als gueltig — auch
+ * einen, der vor der Scope-Erweiterung ausgestellt wurde und nur Notes.Read traegt.
+ * Der Nutzer saehe "Connected" und bekaeme beim Oeffnen eines geteilten Notizbuchs
+ * weiterhin 403. Mit dem Scope als Argument gilt eine zu schmale Verbindung als
+ * nicht vorhanden, und der normale Connect-Flow holt die breitere Zustimmung.
+ */
+const REQUIRED_SCOPES = ['Notes.Read.All'];
+
 function getProvider() {
   return api.asUser().withProvider(PROVIDER_KEY, REMOTE_KEY);
 }
@@ -71,7 +80,7 @@ function buildGraphError(status: number, body: string): MsGraphError {
 export async function checkAuthStatus(): Promise<AuthStatus> {
   const provider = getProvider();
 
-  if (!(await provider.hasCredentials())) {
+  if (!(await provider.hasCredentials(REQUIRED_SCOPES))) {
     return { authenticated: false };
   }
 
@@ -94,13 +103,13 @@ export async function checkAuthStatus(): Promise<AuthStatus> {
 
 export async function requestAuth(): Promise<void> {
   const provider = getProvider();
-  await provider.requestCredentials();
+  await provider.requestCredentials(REQUIRED_SCOPES);
 }
 
 export async function requestMicrosoftGraph<T>(path: string): Promise<T> {
   const provider = getProvider();
 
-  if (!(await provider.hasCredentials())) {
+  if (!(await provider.hasCredentials(REQUIRED_SCOPES))) {
     throw new Error('No Microsoft credentials available. Please authenticate first.');
   }
 
@@ -118,7 +127,7 @@ export async function requestMicrosoftGraphBinary(
 ): Promise<{ data: Buffer; contentType: string }> {
   const provider = getProvider();
 
-  if (!(await provider.hasCredentials())) {
+  if (!(await provider.hasCredentials(REQUIRED_SCOPES))) {
     throw new Error('No Microsoft credentials available. Please authenticate first.');
   }
 
@@ -141,7 +150,7 @@ export async function requestMicrosoftGraphBinary(
 export async function requestMicrosoftGraphText(path: string): Promise<string> {
   const provider = getProvider();
 
-  if (!(await provider.hasCredentials())) {
+  if (!(await provider.hasCredentials(REQUIRED_SCOPES))) {
     throw new Error('No Microsoft credentials available. Please authenticate first.');
   }
 
