@@ -18,9 +18,12 @@ Rekonstruiert aus dem Memory des Vorgaengerprojekts *ConfluenceImporter* (Stand 
 | Redirect URIs | `.../outboundAuth/finish` und `.../outboundAuth/forge/callback` — dokumentiert als gesetzt |
 | Berechtigungen | `User.Read`, `Notes.Read` (delegiert) |
 | Verantwortliches Konto | Persoenliches Microsoft-Konto von Adrian Philipp. **Adresse steht bewusst nicht hier** — dieses Repository ist oeffentlich. Sie liegt im Passwortmanager und im Bead `confluenceimporter-o16`. |
-| **Client Secret gueltig bis** | **27.08.2026** |
+| **Client Secret gueltig bis** | **20.08.2028** (rotiert am 21.08.2026, Vorgaenger geloescht) |
 
-**Zwei getrennte Baustellen:**
+> **Status 21.08.2026: beide unten genannten Baustellen sind erledigt.** Secret rotiert, Production
+> verifiziert (Abschnitt 3.4), altes Secret geloescht. Der Abschnitt bleibt als Ursachenanalyse stehen.
+
+**Zwei getrennte Baustellen (historisch):**
 
 1. **Production-Secret.** Der dokumentierte Deploy-Workflow des Vorgaengerprojekts verwendete ausschliesslich `-e development`. Fuer Production ist keine Provider-Konfiguration dokumentiert. Das passt zum Fehlerbild beim Kunden: In Production ist kein gueltiges Secret hinterlegt, waehrend Development funktionierte.
 2. **Ablauf des Secrets.** Unabhaengig vom Punkt oben faellt der OneNote-Import zum Ablaufdatum aus der Tabelle oben in **allen** Environments aus. Ein neues Secret loest beide Probleme in einem Durchgang. Das Ablaufdatum wird ausschliesslich in dieser Tabelle gepflegt — steht es an zwei Stellen, ist eine davon irgendwann falsch.
@@ -181,8 +184,8 @@ Apps, die **persoenliche Microsoft-Konten** unterstuetzen — wie diese hier —
 
 | Zeitpunkt | Handlung |
 |---|---|
-| T-60 Tage | Rotation planen, Kontozugang pruefen (Abschnitt 6) |
-| T-14 Tage | Rotation durchfuehren (5.1) |
+| T-60 Tage — **21.06.2028** | Rotation planen, Kontozugang pruefen (Abschnitt 6) |
+| T-14 Tage — **06.08.2028** | Rotation durchfuehren (5.1) |
 
 Beide Termine verweisen auf dieses Dokument.
 
