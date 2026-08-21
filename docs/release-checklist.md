@@ -69,6 +69,22 @@ forge install --upgrade   # nur falls sich Scopes geändert haben
 - [ ] `docs/privacy.md` und `docs/terms.md` prüfen — noch zutreffend?
 - [ ] Nach Freigabe: betroffene Kunden aktiv informieren, wenn das Release einen Ausfall behebt
 
+### Runs on Atlassian: dauerhaft nicht erreichbar
+
+`forge deploy` weist nach jedem Release darauf hin, dass die App nicht fuer das
+**Runs on Atlassian**-Programm qualifiziert ist. Begruendung laut `forge eligibility`:
+
+    - App is using remote services
+    - App is egressing data
+
+Das ist **keine Konfigurationsluecke, sondern der Zweck der App**: PageFlow spricht mit der
+Microsoft Graph API, um OneNote zu lesen. Ohne ausgehende Verbindung gaebe es kein
+OneNote-Feature. Das Abzeichen ist damit unerreichbar, solange die Cloud-Anbindung existiert.
+
+Nicht erneut untersuchen. Falls die Marketplace-Sichtbarkeit darunter leidet, waere die
+einzige Alternative eine zweite App ohne OneNote-Cloud — eine Produktentscheidung, keine
+technische.
+
 ## 6. Nach dem Release
 
 - [ ] Kalendereinträge für die nächste Secret-Rotation stehen (T-60 und T-14, siehe Runbook 5.3)
