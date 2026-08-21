@@ -5,6 +5,17 @@ the release notes published on the Atlassian Marketplace.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.10.0] — 2026-08-21
+
+### Fixed
+
+- **Shared and team OneNote notebooks can now be opened.** Notebooks that belong
+  to a Team, a SharePoint site, or someone else who shared them appeared in the
+  list but failed with `Microsoft Graph request failed: 403` when opened. The app
+  only ever requested `Notes.Read`, which covers a user's own notebooks; it now
+  also requests `Notes.Read.All`. **You will be asked to reconnect your Microsoft
+  account once** — existing connections still carry the old, narrower permission.
+
 ## [Unreleased]
 
 ### Fixed

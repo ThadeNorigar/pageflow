@@ -24,6 +24,7 @@ providers:
         - offline_access
         - User.Read
         - Notes.Read
+        - Notes.Read.All
       remotes:
         - microsoft-graph-api
       bearerMethod: authorization-header
