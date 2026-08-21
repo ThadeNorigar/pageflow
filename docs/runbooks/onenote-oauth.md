@@ -222,9 +222,28 @@ Bis zum Ausfall im August 2026 war der zahlende Kunde das Monitoring. Zwei Ebene
 
 ### 7.1 Forge-Alerts (plattform-nativ, reaktiv)
 
-Die Developer Console bietet Metrics, Logs und Alert-Regeln mit Respondern. Eine Regel auf Invocation-Errors der OneNote-Funktion greift auf die Log-Zeile aus Abschnitt 2.
+Eingerichtet am 21.08.2026 in der Developer Console unter *Troubleshoot → Alerts → Alert rules*:
+
+| | |
+|---|---|
+| Name | `Invocation errors in production` |
+| Metrik | Invocation errors, Environment Production |
+| Bedingung | **Above or equal to 1** pro **1 Stunde**, Severity Critical |
+| Responder | Adrian Philipp (E-Mail, Wiederholung alle 24 h bis der Alert geschlossen ist) |
+| Regel-ID | `4dc05c89-2757-43be-ad85-25d732ccb4d7` |
+
+**Warum die schaerfste Schwelle vertretbar ist:** Der Wizard simuliert eine Regel rueckwirkend. Bei dieser Einstellung waeren in den zwei Wochen vor dem 21.08.2026 **null** Alerts ausgeloest worden. Die App produziert im Normalbetrieb keine Invocation-Errors, jeder einzelne ist deshalb ein Signal und kein Rauschen.
+
+**Kein OneNote-Filter moeglich.** Der Filter *Function* bietet genau einen Eintrag: `resolver`. Saemtliche Resolver — OneNote, PDF-Import, PDF- und Word-Export — laufen in derselben Forge-Function. Die Regel deckt damit die ganze App ab. Die Zuordnung passiert im zweiten Schritt ueber die Logs: die Zeile `[PageFlow][onenote-auth]` aus Abschnitt 2 nennt AADSTS-Code und Verantwortlichen.
+
+**Zwei Fallstricke der Console** (beide am 21.08.2026 durch Ausprobieren ermittelt, beide ohne Fehlermeldung):
+
+- Das Feld *Alert description* hat ein stilles Limit zwischen 150 und 160 Zeichen. Wird es ueberschritten, bleibt der Button *Create alert rule* deaktiviert — ohne jeden Hinweis.
+- Wer im Wizard **zurueckspringt**, zerstoert den internen Formularzustand. Der Button bleibt danach deaktiviert, obwohl alle Felder sichtbar gefuellt sind. Einziger Ausweg: Dialog schliessen und von vorn beginnen, ohne *Back*.
 
 **Grenze:** reaktiv. Der Alert feuert erst, wenn ein Nutzer bereits auf den Fehler gelaufen ist.
+
+**Ungetestet:** Die Alarmkette wurde nie ausgeloest. Ein Test braucht einen echten unbehandelten Resolver-Fehler in Production; ein kuenstlicher liess sich nicht ohne Nebenwirkung erzeugen. Der erste echte Fehler ist damit zugleich der Test der Regel — genau die Schwaeche, die bei der OAuth-Konfiguration den Ausfall verursacht hat. Wer sie schliessen will, loest bewusst einen Fehler in Production aus und prueft, ob die Mail ankommt.
 
 ### 7.2 Externe Probe (proaktiv)
 
