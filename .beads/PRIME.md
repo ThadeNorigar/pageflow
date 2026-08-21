@@ -9,9 +9,9 @@
 ```
 [ ] 1. git status              (was hat sich geändert?)
 [ ] 2. git add <files>         (Code-Änderungen stagen — KEINE .env oder Secrets)
-[ ] 3. bd sync                 (Beads-Änderungen committen)
+[ ] 3. bd dolt push            (Beads zum Dolt-Remote pushen)
 [ ] 4. git commit -m "..."     (Code committen)
-[ ] 5. bd sync                 (neue Beads-Änderungen committen)
+[ ] 5. bd dolt push            (neue Beads-Änderungen pushen)
 [ ] 6. git push                (zum Remote pushen)
 ```
 
@@ -103,7 +103,7 @@ Nach `bd create` + `bd update --description/--design` prüfen:
 - `bd blocked` — Blockierte Issues anzeigen
 
 ### Sync
-- `bd sync` — Mit Git Remote synchronisieren (am Session-Ende)
+- `bd dolt push` — Beads zum Dolt-Remote pushen (am Session-Ende). **`bd sync` gibt es seit v1.1 nicht mehr.**
 - `bd stats` — Projekt-Statistiken
 
 ## AK-Verifikation vor Closing

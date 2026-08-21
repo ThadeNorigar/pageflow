@@ -74,7 +74,7 @@ PageFlow ist eine **Atlassian Forge App** für den Confluence Marketplace, die C
 - **Storage**: Forge Storage API (key-value)
 - **APIs**: Confluence REST API, Microsoft Graph API
 - **Auth**: Forge OAuth2 Providers (für MS Graph)
-- **Testing**: Jest + @testing-library/react
+- **Testing**: Jest (Resolver, node) + @testing-library/react auf jsdom (Frontend)
 - **Linting**: ESLint + Prettier
 
 ## Projektstruktur
@@ -178,7 +178,7 @@ npm run format                  # Prettier ausführen
 bd ready                        # Nächste Tasks anzeigen
 bd list --status=open           # Alle offenen Tasks
 bd show <id>                    # Task-Details
-bd sync                         # Git-Sync
+bd dolt push                    # Beads zum Dolt-Remote pushen (frueher: bd sync)
 ```
 
 ## Forge-Spezifika

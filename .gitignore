@@ -49,3 +49,15 @@ temp/
 # Dolt database files (added by bd init)
 .dolt/
 *.db
+
+# Artefakte aus Browser-Verifikationen (Playwright MCP)
+# pageflow-avatar.* ist bewusst NICHT ignoriert - das ist ein echtes Asset
+.playwright-mcp/
+current-tree.png
+pageflow-dropdown-*.png
+pageflow-export-tab.png
+pageflow-final-*.png
+pageflow-import-done.png
+pageflow-onenote-*.png
+pageflow-two-column-*.png
+test-upload*.pdf
