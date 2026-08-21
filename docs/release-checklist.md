@@ -63,8 +63,22 @@ forge install --upgrade   # nur falls sich Scopes geändert haben
 
 ## 5. Marketplace
 
-- [ ] Neue Version im Marketplace-Portal einreichen
-- [ ] Release-Notes aus `CHANGELOG.md` übernehmen
+**Die Version wird NICHT eingereicht.** Atlassian erkennt Forge-Deployments automatisch:
+
+> We automatically detect updates to Forge apps when any changes are released to the
+> production environment, i.e., deployment to production from Forge CLI.
+
+Nach `forge deploy -e production` erscheint die neue Version innerhalb von Minuten im
+Listing. Kein Vendor-Portal-Schritt, keine Atlassian-Review. Nur **Major-Versionen** (bei
+zusätzlichen Scopes oder Wechsel free → paid) müssen die **Kunden** in ihrer Instanz
+bestätigen, nicht Atlassian.
+
+- [ ] Listing prüfen: zeigt `marketplace.atlassian.com/apps/1601744878` die neue Version?
+- [ ] **Release-Notes nachtragen.** Atlassian setzt automatisch den Platzhalter
+      „Minor version update" als Summary UND Details — genau das sehen Kunden. Text aus
+      `CHANGELOG.md` übernehmen unter
+      `marketplace.atlassian.com/manage/apps/1601744878/versions`.
+      Achtung: dieser Bereich verlangt eine **Step-up-Authentifizierung** per E-Mail-Code.
 - [ ] Screenshots in `docs/marketplace/` prüfen — zeigen sie noch die aktuelle Oberfläche?
 - [ ] `docs/privacy.md` und `docs/terms.md` prüfen — noch zutreffend?
 - [ ] Nach Freigabe: betroffene Kunden aktiv informieren, wenn das Release einen Ausfall behebt
