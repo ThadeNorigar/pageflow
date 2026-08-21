@@ -66,3 +66,7 @@ test-upload*.pdf
 # Snapshot-Artefakte aus Browser-Verifikationen
 export-tab-state.md
 .container-service-assets/
+
+# Beads / Dolt files (added by bd init)
+.beads-credential-key
+.beads/proxieddb/
