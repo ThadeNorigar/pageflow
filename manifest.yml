@@ -51,7 +51,7 @@ remotes:
     baseUrl: https://graph.microsoft.com
 resources:
   - key: frontend
-    path: src/frontend/build
+    path: static/frontend
 permissions:
   scopes:
     - read:confluence-content.all

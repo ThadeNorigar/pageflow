@@ -1,5 +1,6 @@
 out/
 build/
+static/
 dist/
 node_modules/
 *.config.js

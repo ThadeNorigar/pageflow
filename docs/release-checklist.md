@@ -54,6 +54,11 @@ forge install --upgrade   # nur falls sich Scopes geändert haben
 
 - [ ] Forge CLI ist aktuell (`npm install -g @forge/cli@latest`) — veraltete CLIs erzeugen
       schwer diagnostizierbare Deploy-Fehler
+- [ ] `forge lint` läuft durch. **Nichts Generiertes unter `src/` ablegen** — Forge CLI 13
+      typ-lintet jede Datei dort gegen die Root-`tsconfig.json` und bricht bei Build-Artefakten
+      ab. Der Webpack-Output geht deshalb nach `static/frontend`, nicht nach `src/frontend/build`.
+- [ ] Nach einem Wechsel des Build-Pfads: `forge tunnel` neu starten, sonst liefert er das
+      alte Verzeichnis aus
 - [ ] Nach dem Deploy: Abschnitt 3 erneut, **gegen Production**
 
 ## 5. Marketplace

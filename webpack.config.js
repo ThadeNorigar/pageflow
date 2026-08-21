@@ -7,7 +7,10 @@ module.exports = {
   context: frontendDir,
   entry: './index.tsx',
   output: {
-    path: path.resolve(frontendDir, 'build'),
+    // Bewusst AUSSERHALB von src/: Forge CLI 13 typ-lintet jede Datei unter src/
+    // gegen die Root-tsconfig. Ein Webpack-Bundle steht in keiner tsconfig, und
+    // `forge lint` (und damit `forge deploy`) bricht dann ab.
+    path: path.resolve(__dirname, 'static/frontend'),
     filename: 'bundle.js',
     clean: true,
   },

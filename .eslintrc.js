@@ -13,5 +13,7 @@ module.exports = {
   rules: {
     '@typescript-eslint/no-explicit-any': 'error',
   },
-  ignorePatterns: ['out/', 'build/', 'dist/', 'node_modules/', '*.config.js'],
+  // static/ ist der Webpack-Output (siehe webpack.config.js) — generierter Code,
+  // wird nie gelintet.
+  ignorePatterns: ['out/', 'build/', 'static/', 'dist/', 'node_modules/', '*.config.js'],
 };
