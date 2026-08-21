@@ -61,3 +61,7 @@ pageflow-import-done.png
 pageflow-onenote-*.png
 pageflow-two-column-*.png
 test-upload*.pdf
+
+# Snapshot-Artefakte aus Browser-Verifikationen
+export-tab-state.md
+.container-service-assets/
