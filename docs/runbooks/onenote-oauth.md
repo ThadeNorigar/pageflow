@@ -81,6 +81,20 @@ Alle Fehler erscheinen dem Kunden als `could not retrieve access token from the 
 
 Seit `src/resolvers/onenote/authErrors.ts` klassifiziert die App diese Codes selbst: der Kunde sieht Klartext statt eines rohen 401, und in den Forge-App-Logs erscheint eine Zeile der Form `[PageFlow][onenote-auth] kind=... code=AADSTS... owner=...`. Dieses Praefix ist der Anker der Alert-Regel (Abschnitt 7) und darf sich nicht aendern.
 
+### 2.1 Graph-Fehler ohne AADSTS-Code
+
+Nicht jeder Fehler ist ein Anmeldefehler. Die OneNote-Endpunkte von Microsoft Graph melden fachliche Fehler mit einem eigenen Code im Response-Body (`{"error":{"code":"10008", ...}}`) — die Anmeldung ist dabei intakt. Ohne Auswertung dieses Codes sieht der Kunde nur den nackten HTTP-Status.
+
+| Code | Bedeutung | Wer muss handeln |
+|------|-----------|------------------|
+| `10008` | Die SharePoint-Dokumentbibliothek enthält mehr als 5.000 OneNote-Items (Notebooks, Sections, Section Groups). Graph verweigert jede Sections-Abfrage in dieser Bibliothek — für jede Anwendung, unabhängig von Berechtigungen. | Kunde (M365-Admin) — oder Ausweichen auf den Local-OneNote-Import |
+
+`src/resolvers/onenote/graphErrors.ts` klassifiziert diese Codes seit dem 24.08.2026 analog zu den AADSTS-Codes. Die Logzeile lautet `[PageFlow][onenote-graph] kind=... code=... owner=...`; auch dieses Praefix ist Auswertungs-Anker und darf sich nicht aendern. Unbekannte Graph-Codes werden mit Code **und** HTTP-Status gemeldet, nie nur mit dem Status.
+
+**Herkunft und Lehre:** Kunde Euronet (Gary Walker), 18.–24.08.2026. Zwei Fixes gingen an der Ursache vorbei — erst der Scope `Notes.Read.All`, dann die erzwungene Scope-Pruefung — weil niemand den Response-Body von Microsoft gelesen hat. Der Code `10008` stand die ganze Zeit im rohen Error-Dump der Forge-Logs. **Bei einem 403 aus Graph zuerst `forge logs` lesen, dann diagnostizieren.**
+
+---
+
 Merksatz: **7000215 heißt, Azure hat ein Secret bekommen und es war falsch.** Wäre gar keins gesetzt, käme ein anderer Fehler. Der Fehler beweist also, dass die Provider-Config existiert, aber falsche Daten enthält.
 
 ---
@@ -234,7 +248,7 @@ Eingerichtet am 21.08.2026 in der Developer Console unter *Troubleshoot → Aler
 
 **Warum die schaerfste Schwelle vertretbar ist:** Der Wizard simuliert eine Regel rueckwirkend. Bei dieser Einstellung waeren in den zwei Wochen vor dem 21.08.2026 **null** Alerts ausgeloest worden. Die App produziert im Normalbetrieb keine Invocation-Errors, jeder einzelne ist deshalb ein Signal und kein Rauschen.
 
-**Kein OneNote-Filter moeglich.** Der Filter *Function* bietet genau einen Eintrag: `resolver`. Saemtliche Resolver — OneNote, PDF-Import, PDF- und Word-Export — laufen in derselben Forge-Function. Die Regel deckt damit die ganze App ab. Die Zuordnung passiert im zweiten Schritt ueber die Logs: die Zeile `[PageFlow][onenote-auth]` aus Abschnitt 2 nennt AADSTS-Code und Verantwortlichen.
+**Kein OneNote-Filter moeglich.** Der Filter *Function* bietet genau einen Eintrag: `resolver`. Saemtliche Resolver — OneNote, PDF-Import, PDF- und Word-Export — laufen in derselben Forge-Function. Die Regel deckt damit die ganze App ab. Die Zuordnung passiert im zweiten Schritt ueber die Logs: die Zeile `[PageFlow][onenote-auth]` aus Abschnitt 2 nennt AADSTS-Code und Verantwortlichen, `[PageFlow][onenote-graph]` aus Abschnitt 2.1 den fachlichen Graph-Fehlercode. Die *Alert description* in der Console nennt bislang nur das erste Praefix.
 
 **Zwei Fallstricke der Console** (beide am 21.08.2026 durch Ausprobieren ermittelt, beide ohne Fehlermeldung):
 

@@ -5,6 +5,25 @@ the release notes published on the Atlassian Marketplace.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.10.1] — 2026-08-24
+
+### Fixed
+
+- **A 403 when opening a notebook now says what is actually wrong.** Microsoft
+  refuses to list the sections of a notebook when its SharePoint document library
+  holds more than 5,000 OneNote items — a server-side limit that applies to every
+  application and has nothing to do with permissions. PageFlow showed only
+  `Microsoft Graph request failed: 403`. It now explains the limit and points to
+  the **Local OneNote** tab, which bypasses the Microsoft API entirely. Other
+  OneNote errors name their error code instead of just the HTTP status.
+- **Resolver errors no longer carry the `There was an error invoking the
+  function -` preamble** in front of the actual explanation.
+
+- **An expired session is now explained instead of dumped.** Leaving a tab open
+  for hours made the next import fail with `Token has expired: 1787330314 >
+  1787330251` — two raw timestamps and no way to act on them. PageFlow now says
+  the session expired and to reload the page. Applies to all four tabs.
+
 ## [2.10.0] — 2026-08-21
 
 ### Fixed
@@ -15,15 +34,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   only ever requested `Notes.Read`, which covers a user's own notebooks; it now
   also requests `Notes.Read.All`. **You will be asked to reconnect your Microsoft
   account once** — existing connections still carry the old, narrower permission.
-
-## [Unreleased]
-
-### Fixed
-
-- **An expired session is now explained instead of dumped.** Leaving a tab open
-  for hours made the next import fail with `Token has expired: 1787330314 >
-  1787330251` — two raw timestamps and no way to act on them. PageFlow now says
-  the session expired and to reload the page. Applies to all four tabs.
 
 ## [2.9.0] — 2026-08-21
 

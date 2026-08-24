@@ -22,8 +22,17 @@ export function isSessionExpiredError(raw: unknown): boolean {
   return /\btoken\b/i.test(text) && /\bexpired\b/i.test(text);
 }
 
+// @forge/bridge stellt jeder Resolver-Fehlermeldung diesen Satz voran — je nach
+// Version mit oder ohne Funktionsnamen. Fuer den Endnutzer ist er Rauschen und
+// draengt die eigentliche Erklaerung aus dem Blickfeld.
+const BRIDGE_PREFIX_PATTERN = /^There was an error invoking the function[^-]*-\s*/i;
+
+function stripBridgePrefix(text: string): string {
+  return text.replace(BRIDGE_PREFIX_PATTERN, '');
+}
+
 export function describeError(raw: unknown, fallback: string): string {
   if (isSessionExpiredError(raw)) return SESSION_EXPIRED_MESSAGE;
-  const text = toText(raw);
+  const text = stripBridgePrefix(toText(raw));
   return text || fallback;
 }

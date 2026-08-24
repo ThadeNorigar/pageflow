@@ -46,3 +46,35 @@ describe('describeError', () => {
     expect(describeError(new Error(''), 'Import failed')).toBe('Import failed');
   });
 });
+
+describe('Forge-Praefix bei Resolver-Fehlern', () => {
+  // @forge/bridge stellt jeder Resolver-Fehlermeldung diesen Satz voran. Fuer den
+  // Endnutzer ist er Rauschen und draengt die eigentliche Erklaerung nach hinten.
+  it('entfernt den Bridge-Vorspann und laesst die Erklaerung des Resolvers stehen', () => {
+    const err = new Error(
+      'There was an error invoking the function - Microsoft cannot list this notebook: the SharePoint document library holding it contains more than 5,000 OneNote items.'
+    );
+
+    expect(describeError(err, 'Failed')).toBe(
+      'Microsoft cannot list this notebook: the SharePoint document library holding it contains more than 5,000 OneNote items.'
+    );
+  });
+
+  it('entfernt den Vorspann auch mit genanntem Funktionsnamen', () => {
+    const err = new Error("There was an error invoking the function 'getNotebookSections' - Access denied");
+
+    expect(describeError(err, 'Failed')).toBe('Access denied');
+  });
+
+  it('laesst eine Meldung ohne Vorspann unveraendert', () => {
+    expect(describeError(new Error('Import failed'), 'Failed')).toBe('Import failed');
+  });
+
+  it('erkennt den Sitzungsablauf auch hinter dem Vorspann', () => {
+    const err = new Error(
+      'There was an error invoking the function - Token has expired: 1787330314 > 1787330251'
+    );
+
+    expect(describeError(err, 'Failed')).toBe(SESSION_EXPIRED_MESSAGE);
+  });
+});

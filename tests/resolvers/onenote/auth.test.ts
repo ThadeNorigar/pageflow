@@ -259,3 +259,77 @@ describe('Scope-Pruefung bei bestehenden Verbindungen', () => {
     expect(mockRequestCredentials).toHaveBeenCalledWith(['Notes.Read.All']);
   });
 });
+
+describe('Graph-Fehlercodes in requestMicrosoftGraph', () => {
+  // Originalantwort von Microsoft aus den Production-Logs vom 24.08.2026 (Kunde Euronet)
+  const LIBRARY_TOO_LARGE = {
+    error: {
+      code: '10008',
+      message:
+        'One or more of the document libraries on the user or group\u2019s OneDrive contains more than 5,000 OneNote items (notebooks, sections, section groups) and cannot be queried using the API.',
+      innerError: { 'request-id': '97f2f2fb-9dfc-49d0-a2aa-08e346cfd264' },
+    },
+  };
+
+  beforeEach(() => {
+    mockHasCredentials.mockReset();
+    mockFetch.mockReset();
+    mockHasCredentials.mockResolvedValue(true);
+  });
+
+  it('erklaert den 403 bei ueberfuellter Dokumentbibliothek statt nur den Status zu nennen', async () => {
+    mockFetch.mockResolvedValue(graphResponse(LIBRARY_TOO_LARGE, false, 403));
+
+    try {
+      await requestMicrosoftGraph('/v1.0/me/onenote/notebooks/1/sections');
+      fail('should have thrown');
+    } catch (err) {
+      const msErr = err as MsGraphError;
+      expect(msErr).toBeInstanceOf(MsGraphError);
+      expect(msErr.status).toBe(403);
+      expect(msErr.message).not.toBe('Microsoft Graph request failed: 403');
+      expect(msErr.message).toContain('5,000 OneNote items');
+      expect(msErr.message).toContain('Local OneNote');
+    }
+  });
+
+  it('gibt die Request-ID von Microsoft nicht an den Nutzer weiter', async () => {
+    mockFetch.mockResolvedValue(graphResponse(LIBRARY_TOO_LARGE, false, 403));
+
+    try {
+      await requestMicrosoftGraph('/v1.0/me/onenote/notebooks/1/sections');
+      fail('should have thrown');
+    } catch (err) {
+      expect((err as MsGraphError).message).not.toContain('97f2f2fb');
+    }
+  });
+
+  it('nennt bei unbekanntem Graph-Fehlercode den Code', async () => {
+    mockFetch.mockResolvedValue(
+      graphResponse({ error: { code: '20166', message: 'Resource busy' } }, false, 429)
+    );
+
+    try {
+      await requestMicrosoftGraph('/v1.0/me/onenote/notebooks');
+      fail('should have thrown');
+    } catch (err) {
+      expect((err as MsGraphError).message).toContain('20166');
+    }
+  });
+
+  it('laesst einen Fehler ohne Graph-Code beim bisherigen Wortlaut', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => 'Internal Server Error',
+      json: async () => ({}),
+    });
+
+    try {
+      await requestMicrosoftGraph('/v1.0/me/onenote/notebooks');
+      fail('should have thrown');
+    } catch (err) {
+      expect((err as MsGraphError).message).toBe('Microsoft Graph request failed: 500');
+    }
+  });
+});

@@ -192,3 +192,52 @@ describe('NotebookBrowser nach fehlgeschlagenem Verbindungsversuch', () => {
     expect(screen.queryByText('Connection was not completed')).not.toBeInTheDocument();
   });
 });
+
+describe('NotebookBrowser bei Graph-Fehler beim Aufklappen', () => {
+  // Genau der Fall des Euronet-Kunden: die Sections-Abfrage scheitert an Code 10008.
+  const LIBRARY_MESSAGE =
+    'Microsoft cannot list this notebook: the SharePoint document library holding it contains ' +
+    'more than 5,000 OneNote items. Use the "Local OneNote" tab to import an HTML export instead. (HTTP 403)';
+
+  beforeEach(() => {
+    mockInvoke.mockReset();
+    mockInvoke.mockImplementation((name: string) => {
+      if (name === 'checkAuthStatus') {
+        return Promise.resolve({
+          authenticated: true,
+          user: { displayName: 'Gary Walker', mail: 'gary@example.com' },
+        });
+      }
+      if (name === 'getNotebooks') {
+        return Promise.resolve({
+          notebooks: [
+            { id: '1', displayName: 'Operations Notebook', lastModifiedDateTime: '2026-08-01T00:00:00Z' },
+          ],
+        });
+      }
+      if (name === 'getNotebookSections') {
+        return Promise.reject(
+          new Error(`There was an error invoking the function - ${LIBRARY_MESSAGE}`)
+        );
+      }
+      return Promise.resolve({});
+    });
+  });
+
+  it('zeigt die Erklaerung des Resolvers statt des Bridge-Vorspanns', async () => {
+    render(<NotebookBrowser onSelectionChange={jest.fn()} />);
+
+    await userEvent.click(await screen.findByText('Operations Notebook'));
+
+    expect(await screen.findByText(/document library holding it contains/)).toBeInTheDocument();
+    expect(screen.queryByText(/There was an error invoking/)).not.toBeInTheDocument();
+  });
+
+  it('verweist auf den lokalen Import als Ausweg', async () => {
+    render(<NotebookBrowser onSelectionChange={jest.fn()} />);
+
+    await userEvent.click(await screen.findByText('Operations Notebook'));
+
+    expect(await screen.findByText(/Local OneNote/)).toBeInTheDocument();
+  });
+});

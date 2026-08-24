@@ -6,6 +6,7 @@ import {
   classifyAuthError,
   formatAuthLogLine,
 } from './authErrors';
+import { GraphErrorInfo, classifyGraphError, formatGraphLogLine } from './graphErrors';
 
 const PROVIDER_KEY = 'microsoft-graph';
 const REMOTE_KEY = 'microsoft-graph-api';
@@ -15,7 +16,8 @@ export class MsGraphError extends Error {
     message: string,
     public status: number,
     public body: string,
-    public authError?: AuthErrorInfo
+    public authError?: AuthErrorInfo,
+    public graphError?: GraphErrorInfo
   ) {
     super(message);
     this.name = 'MsGraphError';
@@ -69,12 +71,21 @@ function toAuthStatusError(raw: unknown, context: string, fallback: string): Aut
 }
 
 function buildGraphError(status: number, body: string): MsGraphError {
-  const info = classifyAuthError(body);
-  if (!info) {
-    return new MsGraphError(`Microsoft Graph request failed: ${status}`, status, body);
+  const authInfo = classifyAuthError(body);
+  if (authInfo) {
+    logAuthError(authInfo, 'graph-request');
+    return new MsGraphError(`${authInfo.message} (AADSTS${authInfo.code})`, status, body, authInfo);
   }
-  logAuthError(info, 'graph-request');
-  return new MsGraphError(`${info.message} (AADSTS${info.code})`, status, body, info);
+
+  // Kein Anmeldefehler: Graph meldet fachliche Fehler wie 10008 mit eigenem Code im Body.
+  // Ohne diese Klassifizierung saehe der Nutzer nur den nackten HTTP-Status.
+  const graphInfo = classifyGraphError(body);
+  if (graphInfo) {
+    console.error(formatGraphLogLine(graphInfo, 'graph-request'));
+    return new MsGraphError(`${graphInfo.message} (HTTP ${status})`, status, body, undefined, graphInfo);
+  }
+
+  return new MsGraphError(`Microsoft Graph request failed: ${status}`, status, body);
 }
 
 export async function checkAuthStatus(): Promise<AuthStatus> {

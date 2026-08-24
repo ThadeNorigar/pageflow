@@ -73,7 +73,7 @@ function readStringProperty(value: object, key: string): string {
  * Führt Message und Body eines Fehlers zu einem durchsuchbaren Text zusammen.
  * Der AADSTS-Code steckt je nach Fehlerpfad mal in der Message, mal im Response-Body.
  */
-function toSearchableText(raw: unknown): string {
+export function toSearchableText(raw: unknown): string {
   if (raw === null || raw === undefined) return '';
   if (typeof raw === 'string') return raw;
 

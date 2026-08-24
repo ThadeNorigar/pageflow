@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { invoke } from '@forge/bridge';
+import { describeError } from '../utils/errorMessages';
 import { C } from '../utils/colors';
 import { deriveAuthFailureView } from '../utils/authFailure';
 import { markConnectAttempt, clearConnectAttempt, hasRecentConnectAttempt } from '../utils/connectAttempt';
@@ -157,7 +158,7 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange, on
           setAttemptFailed(true);
         }
       })
-      .catch(err => setAuthStatus({ authenticated: false, error: err.message }));
+      .catch(err => setAuthStatus({ authenticated: false, error: describeError(err, 'Failed to check the Microsoft connection') }));
   }, []);
 
   const loadNotebooks = useCallback(async () => {
@@ -168,7 +169,7 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange, on
       setNotebooks(result.notebooks);
       setAuthStatus(prev => ({ ...prev, authenticated: true }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load notebooks');
+      setError(describeError(err, 'Failed to load notebooks'));
     } finally {
       setLoading(false);
     }
@@ -210,7 +211,7 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange, on
         const result = await invoke<{ sections: Section[] }>('getNotebookSections', { notebookId: id });
         setSectionsCache(prev => new Map(prev).set(id, result.sections));
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load sections');
+        setError(describeError(err, 'Failed to load sections'));
         setExpandedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
       } finally {
         setLoadingIds(prev => { const n = new Set(prev); n.delete(id); return n; });
@@ -223,7 +224,7 @@ const NotebookBrowser: React.FC<NotebookBrowserProps> = ({ onSelectionChange, on
         const result = await invoke<{ pages: OneNotePage[] }>('getSectionPages', { sectionId: id });
         setPagesCache(prev => new Map(prev).set(id, result.pages));
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load pages');
+        setError(describeError(err, 'Failed to load pages'));
         setExpandedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
       } finally {
         setLoadingIds(prev => { const n = new Set(prev); n.delete(id); return n; });
