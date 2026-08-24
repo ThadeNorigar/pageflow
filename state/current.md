@@ -1,13 +1,17 @@
 # PageFlow — Current State
 
 ## Recent Context
+- **2026-08-24**: Euronet-403 — echte Ursache gefunden: Microsoft Graph **Code 10008**, die SharePoint-Bibliothek des Kunden enthält über 5.000 OneNote-Items. Serverseitiges Limit, nicht behebbar. Die zwei Fixes davor (Notes.Read.All, Scope-Prüfung) waren Fehldiagnosen. PageFlow erklärt den Fehler jetzt und verweist auf den Local-Import — **2.13.0** live. Runbook Abschnitt 2.1 hält die Lehre fest: bei 403 aus Graph zuerst `forge logs` lesen.
 - **2026-08-21**: OneNote-OAuth-Ausfall behoben (Secret war in Production nie gesetzt), Release 2.9.0. Danach Kundenmeldung Euronet: 403 auf geteilten Notebooks — das Manifest forderte nur `Notes.Read` an statt `Notes.Read.All`. Behoben in **2.11.0**. Beads-DB auf `pageflow` umgezogen. Health-Probe, Forge-Alert-Regel und Rotations-Termin 2028 eingerichtet.
 - **2026-06-13**: Großes Funktions-Update. PDF-Export neu gebaut (htmlparser2 + pdfmake, Briefpapier-Hybrid), Word-Export (.docx) ergänzt, OneNote-Cloud-Bilder implementiert, Security S-1..S-4 gefixt, Hilfe-Boxen dauerhaft sichtbar, 3 UX-Fixes. 3 Production-Deploys → **v2.8.0 ist PUBLIC im Marketplace**. 257 Tests grün.
 - **2026-03-28**: v2.1.0 Release vorbereitet, Repo-Rename ConfluenceImporter → PageFlow.
 
 ## Active
-- **Wartet auf Euronet**: bestätigt 2.11.0, dass geteilte/Team-Notebooks jetzt aufgehen? Ob Forge bestehende Verbindungen selbst erneuert, ist unbewiesen (Confidence 65 %) — sonst muss der Kunde die Autorisierung manuell widerrufen.
-- Release-Notes für 2.11.0 im Marketplace stehen noch auf Atlassians Platzhalter
+- **Wartet auf Euronet**: sieht Gary Walker jetzt die 10008-Erklärung statt "403"? Der Pfad ist in unserem Tenant nicht auslösbar — **ungetestet in Production**, den Beweis kann nur der Kunde erbringen.
+- **Mail an Gary ist nicht raus.** Zwei Entwürfe existieren (Ursache + Local-Import in Batches), gesendet wurde keiner.
+- **Offene Frage an Garys O365-Team**: was genau sprengt die 5.000-Item-Grenze? Das Limit zählt Sections und Section Groups, nicht Seiten — sein grosses "Operations Notebook" muss nicht der Auslöser sein. Wenn etwas anderes schuld ist, wäre die Cloud-Route zu retten.
+- Falls Gary viele Import-Durchgänge braucht: `MAX_FILE_COUNT` (100 Seiten pro Lauf im Local-Import) prüfen und ggf. erhöhen — angeboten, aber ungetestet.
+- Release-Notes für 2.13.0 im Marketplace stehen noch auf Atlassians Platzhalter
 - Optional: OneNote-Bild-Upload mit echter Bild-Seite live testen (bisher nur Unit-getestet)
 
 ## Known Issues
@@ -18,4 +22,5 @@
 
 - **`deploy dolt-remote` = ~20 Minuten Ausfall** für ALLE Beads-Projekte. Der Container braucht nach dem Rebuild so lange bis erreichbar. Nicht dazwischenfunken, einfach warten.
 - **Marketplace-Version zählt Forge selbst hoch**, `package.json` spielt keine Rolle. Jeder Production-Deploy = +1 Minor.
+- **Graph-Fehler sind nicht gleich Anmeldefehler.** `[PageFlow][onenote-auth]` = AADSTS/Credentials, `[PageFlow][onenote-graph]` = fachlicher Graph-Code. Beide Praefixe stehen in der Alert-Beschreibung; das stille 160-Zeichen-Limit dort ist real.
 - **`sync.remote` bei neueren bd-Versionen** steht per Default auf `git+<origin>`. Dieses Repo ist öffentlich — der Sync muss beim privaten Dolt-Server bleiben.
