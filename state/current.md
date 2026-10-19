@@ -1,6 +1,7 @@
 # PageFlow — Current State
 
 ## Recent Context
+- **2026-10-19**: Forge-Alert #2 = ein einzelner Resolver-Timeout (25 s) in Production, Aktion unbekannt, da nicht geloggt. Paid-Umstieg recherchiert (0 % Revenue Share bis 1 Mio. USD, Free→Paid laut FAQ evtl. verboten) → Bead `confluenceimporter-96h`, P4.
 - **2026-08-24**: Euronet-403 — echte Ursache gefunden: Microsoft Graph **Code 10008**, die SharePoint-Bibliothek des Kunden enthält über 5.000 OneNote-Items. Serverseitiges Limit, nicht behebbar. Die zwei Fixes davor (Notes.Read.All, Scope-Prüfung) waren Fehldiagnosen. PageFlow erklärt den Fehler jetzt und verweist auf den Local-Import — **2.13.0** live. Runbook Abschnitt 2.1 hält die Lehre fest: bei 403 aus Graph zuerst `forge logs` lesen.
 - **2026-08-21**: OneNote-OAuth-Ausfall behoben (Secret war in Production nie gesetzt), Release 2.9.0. Danach Kundenmeldung Euronet: 403 auf geteilten Notebooks — das Manifest forderte nur `Notes.Read` an statt `Notes.Read.All`. Behoben in **2.11.0**. Beads-DB auf `pageflow` umgezogen. Health-Probe, Forge-Alert-Regel und Rotations-Termin 2028 eingerichtet.
 - **2026-06-13**: Großes Funktions-Update. PDF-Export neu gebaut (htmlparser2 + pdfmake, Briefpapier-Hybrid), Word-Export (.docx) ergänzt, OneNote-Cloud-Bilder implementiert, Security S-1..S-4 gefixt, Hilfe-Boxen dauerhaft sichtbar, 3 UX-Fixes. 3 Production-Deploys → **v2.8.0 ist PUBLIC im Marketplace**. 257 Tests grün.
